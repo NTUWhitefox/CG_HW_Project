@@ -1,0 +1,22 @@
+{
+  "OutputFoldersPerTargetSystem": {
+    "本機電腦": [
+      "out\\build\\x64-Debug",
+      "out\\install\\x64-Debug"
+    ]
+  },
+  "ExpandedNodes": [
+    "",
+    "\\build",
+    "\\build\\CMakeFiles",
+    "\\build\\CMakeFiles\\3.29.3",
+    "\\include\\FL",
+    "\\lib\\Debug",
+    "\\lib\\Release",
+    "\\out",
+    "\\out\\build",
+    "\\src"
+  ],
+  "SelectedNode": "\\src\\TargaImage.cpp",
+  "PreviewInSolutionExplorer": false
+}
