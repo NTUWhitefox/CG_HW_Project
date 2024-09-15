@@ -129,7 +129,9 @@ bool CScriptHandler::HandleCommand(const char* sCommand, TargaImage*& pImage)
             if (pImage)
                 delete pImage;
             char* sFilename = strtok(NULL, c_sWhiteSpace);
-            bResult = (pImage = TargaImage::Load_Image(sFilename)) != NULL;
+            pImage = TargaImage::Load_Image(sFilename);
+
+            bResult = (pImage != NULL);
 
             if (!bResult)
             {

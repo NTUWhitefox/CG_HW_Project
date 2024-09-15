@@ -1,1 +1,0 @@
- lib/Release/fltk_forms.lib lib/Release/fltk_gl.lib lib/Release/fltk_images.lib lib/Release/fltk_jpeg.lib lib/Release/fltk_png.lib lib/Release/fltk_z.lib lib/Release/fltk.lib liblibtarga.a -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32 

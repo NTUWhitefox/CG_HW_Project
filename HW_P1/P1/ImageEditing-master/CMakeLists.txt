@@ -1,10 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 
 project(ImageEditing)
-
-# add_executable(ImageEditing ${SOURCES})
-# set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
-
 set(SRC_DIR ${PROJECT_SOURCE_DIR}/src/)
 set(INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include/)
 set(LIB_DIR ${PROJECT_SOURCE_DIR}/lib/)

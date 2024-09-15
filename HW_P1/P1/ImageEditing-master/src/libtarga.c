@@ -215,6 +215,7 @@ void * tga_load( const char * filename,
     /* open binary image file */
     targafile = fopen( filename, "rb" );
     if( targafile == NULL ) {
+        printf("at line 218 libtarga.c, a check for no file read. File name : %s\n", filename);
         TargaError = TGA_ERR_OPEN_FAILS;
         return( NULL );
     }

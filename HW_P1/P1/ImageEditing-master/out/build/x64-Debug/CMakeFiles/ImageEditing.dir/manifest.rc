@@ -1,0 +1,2 @@
+#pragma code_page(65001)
+1 /* CREATEPROCESS_MANIFEST_RESOURCE_ID */ 24 /* RT_MANIFEST */ "C:/Computer_Graphic_Project/CG_HW_Project/HW_P1/P1/ImageEditing-master/out/build/x64-Debug/CMakeFiles/ImageEditing.dir/embed.manifest"

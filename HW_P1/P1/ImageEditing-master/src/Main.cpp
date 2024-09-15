@@ -27,7 +27,7 @@
 using namespace std;
 
 // constants
-const char      c_sNames["Sun-Yu-Chen"] = "-names";             // display student names command line switch
+const char      c_sNames[]          = "-names";             // display student names command line switch
 const char      c_sHeadless[]       = "-headless";          // headless command line switch
 
 // globals

@@ -171,6 +171,16 @@ bool TargaImage::Save_Image(const char *filename)
 //  must be deleted by caller.  Return NULL on failure.
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+char* TargaImage::GetLoadPath(char* filename) {
+    const char* basePath = "C:\\Computer_Graphic_Project\\CG_HW_Project\\HW_P1\\P1\\ImageEditing-master\\Images\\load\\";
+    char* fullPath = (char*)malloc(strlen(basePath) + strlen(filename) + 1);
+    strcpy(fullPath, basePath);
+    strcat(fullPath, filename);
+    return fullPath;;
+ }
+
+
 TargaImage* TargaImage::Load_Image(char *filename)
 {
     unsigned char   *temp_data;
@@ -183,24 +193,30 @@ TargaImage* TargaImage::Load_Image(char *filename)
         cout << "No filename given." << endl;
         return NULL;
     }// if
+    char* FilePath = GetLoadPath(filename);
+    //printf("file name %s\n", FilePath);
 
-    temp_data = (unsigned char*)tga_load(filename, &width, &height, TGA_TRUECOLOR_32);
+    temp_data = (unsigned char*)tga_load(FilePath, &width, &height, TGA_TRUECOLOR_32);
     if (!temp_data)
     {
-        cout << "TGA Error: %s\n", tga_error_string(tga_get_last_error());
+        cout << "TGA Error : %s\n" << tga_error_string(tga_get_last_error()) << endl;
 	    width = height = 0;
 	    return NULL;
     }
     temp_image = new TargaImage(width, height, temp_data);
     free(temp_data);
-
+    //cout << "SizeDebug" << width << " " << height << endl;
     result = temp_image->Reverse_Rows();
 
     delete temp_image;
-
+    free(FilePath);
     return result;
 }// Load_Image
 
+
+void Debugging(char* filename, int line, string messenge) {
+    cout << "debugging from " << line << " line of " << filename << " messenge : " << messenge << endl;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -210,9 +226,20 @@ TargaImage* TargaImage::Load_Image(char *filename)
 //
 ///////////////////////////////////////////////////////////////////////////////
 bool TargaImage::To_Grayscale()
-{
-	ClearToBlack();
-	return false;
+{ 
+    int channelOffet = width * height;
+    for (int i = 0; i < height; i++) {
+        for (int j = 0; j < width; j++) {
+            int pixelIndex = (i * width + j) * 4;
+            float grayValue = (float)data[pixelIndex + RED] * grayCoef[RED] +
+                (float)data[pixelIndex + GREEN] * grayCoef[GREEN] +
+                (float)data[pixelIndex + BLUE] * grayCoef[BLUE];
+            unsigned char gray = static_cast<unsigned char>(std::min(255.0f, std::max(0.0f, grayValue)));
+            // Assign grayscale value to R, G, and B channels
+            data[pixelIndex + RED] = data[pixelIndex + GREEN] = data[pixelIndex + BLUE] = gray;
+        }
+    }
+	return true;
 }// To_Grayscale
 
 
@@ -224,8 +251,19 @@ bool TargaImage::To_Grayscale()
 ///////////////////////////////////////////////////////////////////////////////
 bool TargaImage::Quant_Uniform()
 {
-    ClearToBlack();
-    return false;
+    for (int i = 0; i < height; i++) {
+        for (int j = 0; j < width; j++) {
+            int pixelIndex = (i * width + j) * 4;
+            unsigned char quantizedRed = (data[pixelIndex + RED] >> 5);
+            unsigned char quantizedGreen = (data[pixelIndex + GREEN] >> 5);
+            unsigned char quantizedBlue = (data[pixelIndex + BLUE] >> 6);
+            // for visualization, we should convert back to 8bit
+            data[pixelIndex + RED] = quantizedRed << 5;
+            data[pixelIndex + GREEN] = quantizedRed << 5;
+            data[pixelIndex + RED] = quantizedRed << 6;
+        }
+    }
+    return true;
 }// Quant_Uniform
 
 
@@ -237,8 +275,54 @@ bool TargaImage::Quant_Uniform()
 ///////////////////////////////////////////////////////////////////////////////
 bool TargaImage::Quant_Populosity()
 {
-    ClearToBlack();
-    return false;
+    auto Flattening = [](unsigned char R, unsigned char G, unsigned char B, int scale) {
+        return scale * scale * (int)R + scale * (int)G + (int)B;
+    };
+    auto BacktoSpace = [](int& r, int& g, int& b,int colorValue) {
+        r = (colorValue >> 10); colorValue -= (r << 10); r <<= 3;
+        g = (colorValue >> 5); colorValue -= (g << 5); g <<= 3;
+        b = colorValue; b <<= 3;
+    };
+    pair<int, int> Histogram[40000];
+    for (int i = 0; i < 40000; i++) Histogram[i] = pair<int, int>(0, i);
+
+    for (int i = 0; i < width * height; i++) {
+        int pixelIndex = i * 4;
+        unsigned char quantizedRed = (data[pixelIndex + RED] >> 3);
+        unsigned char quantizedGreen = (data[pixelIndex + GREEN] >> 3);
+        unsigned char quantizedBlue = (data[pixelIndex + BLUE] >> 3);
+
+        Histogram[Flattening(quantizedRed, quantizedGreen, quantizedBlue, 32)].first++;
+    }
+    sort(Histogram, Histogram + 32768, greater<pair<int,int>>());
+
+    int PopularSize = 0,cnt = 0;
+    for (int i = 0; i < 32768; i++) if (Histogram[i].first != 0) cnt++;
+    //Debugging("TargalImage.cpp", 301, "Size : " + to_string(cnt));
+    for (; PopularSize < 256; PopularSize++) if (Histogram[PopularSize].first == 0) break;
+    for (int i = 0; i < width * height; i++) {
+        int pixelIndex = i * 4;
+        unsigned char origRed = data[pixelIndex];
+        unsigned char origGreen = data[pixelIndex + 1];
+        unsigned char origBlue = data[pixelIndex + 2];
+
+        int minIndex = 0, minDis = 2147483640;
+        for(int c = 0;c < PopularSize;c++) {
+            int Dis = 0,colorValue = Histogram[c].second,r,g,b;
+            BacktoSpace(r, g, b, colorValue);
+            Dis = (origRed - r) * (origRed - r) + (origGreen - g) * (origGreen - g) + (origBlue - b) * (origBlue - b);
+            if (Dis < minDis) {
+                minDis = Dis;
+                minIndex = c;
+            }
+        }
+        int newR, newG, newB;
+        BacktoSpace(newR, newG, newB, Histogram[minIndex].second);
+        data[pixelIndex + RED] = newR;
+        data[pixelIndex + GREEN] = newG;
+        data[pixelIndex + BLUE] = newB;
+    }
+    return true;
 }// Quant_Populosity
 
 
@@ -249,8 +333,17 @@ bool TargaImage::Quant_Populosity()
 ///////////////////////////////////////////////////////////////////////////////
 bool TargaImage::Dither_Threshold()
 {
-    ClearToBlack();
-    return false;
+    for (int i = 0; i < width * height; i++) {
+        int pixelIndex = i * 4;
+        unsigned char red = (data[pixelIndex + RED]);
+        unsigned char green = (data[pixelIndex + GREEN]);
+        unsigned char blue = (data[pixelIndex + BLUE]);
+        unsigned char grayscale = (unsigned char)(0.299f * red + 0.587f * green + 0.114f * blue);
+        unsigned char newValue = (grayscale >= 128) ? 255 : 0;
+        //cout << newValue / 255;
+        data[pixelIndex + RED] = data[pixelIndex + GREEN] = data[pixelIndex + BLUE] = newValue;
+    }
+    return true;
 }// Dither_Threshold
 
 
@@ -261,8 +354,19 @@ bool TargaImage::Dither_Threshold()
 ///////////////////////////////////////////////////////////////////////////////
 bool TargaImage::Dither_Random()
 {
-    ClearToBlack();
-    return false;
+    srand((unsigned int)time(0));
+    for (int i = 0; i < width * height; i++) {
+        int pixelIndex = i * 4;
+        unsigned char red = (data[pixelIndex + RED]);
+        unsigned char green = (data[pixelIndex + GREEN]);
+        unsigned char blue = (data[pixelIndex + BLUE]);
+        unsigned char grayscale = (unsigned char)(0.299f * red + 0.587f * green + 0.114f * blue);
+        float randomNoise = ((float)rand() / RAND_MAX) * 0.4f - 0.2f;
+        unsigned char randomThreshold = (0.5f - randomNoise) * 255.0f;
+        unsigned char newValue = (grayscale >= randomThreshold) ? 255 : 0;
+        data[pixelIndex + RED] = data[pixelIndex + GREEN] = data[pixelIndex + BLUE] = newValue;
+    }
+    return true;
 }// Dither_Random
 
 
@@ -274,8 +378,40 @@ bool TargaImage::Dither_Random()
 ///////////////////////////////////////////////////////////////////////////////
 bool TargaImage::Dither_FS()
 {
-    ClearToBlack();
-    return false;
+
+    for (int i = 0; i < height; i++) {
+        for (int j = 0; j < width; j++) {
+            int pixelIndex = (i * width + j) * 4;
+            unsigned char red = data[pixelIndex + RED];
+            unsigned char green = data[pixelIndex + GREEN];
+            unsigned char blue = data[pixelIndex + BLUE];
+            unsigned char grayscale = (unsigned char)(0.299f * red + 0.587f * green + 0.114f * blue);
+            unsigned char newValue = (grayscale >= 128) ? 255 : 0;
+            float error = (float)grayscale - (float)newValue;
+            // Set the new color (black or white) for the pixel
+            data[pixelIndex + RED] = data[pixelIndex + GREEN] = data[pixelIndex + BLUE] = newValue;
+            // Propagate error to neighboring pixels
+            if (j + 1 < width) { // Right neighbor
+                int rightPixelIndex = (i * width + (j + 1)) * 4;
+                for (int c = 0; c < 3; c++)  data[rightPixelIndex + c] = std::min(255, std::max(0, data[rightPixelIndex + c] + (int)(error * 7.0f / 16.0f)));
+            }
+            if (i + 1 < height) { // Bottom neighbor
+                int bottomPixelIndex = ((i + 1) * width + j) * 4;
+                for (int c = 0; c < 3; c++) data[bottomPixelIndex + c] = std::min(255, std::max(0, data[bottomPixelIndex + c] + (int)(error * 5.0f / 16.0f)));;
+                if (j + 1 < width) { // Bottom-right neighbor
+                    int bottomRightPixelIndex = ((i + 1) * width + (j + 1)) * 4;
+                    for (int c = 0; c < 3; c++) data[bottomRightPixelIndex + c] = std::min(255, std::max(0, data[bottomRightPixelIndex + c] + (int)(error * 1.0f / 16.0f)));
+                }
+            }
+            if (i + 1 < height && j > 0) { // Bottom-left neighbor
+                int bottomLeftPixelIndex = ((i + 1) * width + (j - 1)) * 4;
+                for (int c = 0; c < 3; c++) data[bottomLeftPixelIndex + c] = std::min(255, std::max(0, data[bottomLeftPixelIndex + c] + (int)(error * 3.0f / 16.0f)));
+            }
+        }
+    }
+
+    // Clean up the temporary buffer
+    return true;
 }// Dither_FS
 
 
@@ -287,8 +423,24 @@ bool TargaImage::Dither_FS()
 ///////////////////////////////////////////////////////////////////////////////
 bool TargaImage::Dither_Bright()
 {
-    ClearToBlack();
-    return false;
+    float avgBrightness = 0.0;
+    unsigned char* Gray = (unsigned char*)malloc(width * height * sizeof(unsigned char));
+    for (int i = 0; i < width * height; i++) {
+        int pixelIndex = i * 4;
+        unsigned char red = (data[pixelIndex + RED]);
+        unsigned char green = (data[pixelIndex + GREEN]);
+        unsigned char blue = (data[pixelIndex + BLUE]);
+        Gray[i] = (unsigned char)(0.299f * red + 0.587f * green + 0.114f * blue);
+        avgBrightness += Gray[i];
+    }
+    avgBrightness /= (width * height);
+
+    for (int i = 0; i < width * height; i++) {
+        int pixelIndex = i * 4;
+        data[pixelIndex + RED] = data[pixelIndex + GREEN] = data[pixelIndex + BLUE] = (Gray[i] >= avgBrightness ? 255 : 0);
+    }
+    free(Gray);
+    return true;
 }// Dither_Bright
 
 
@@ -299,8 +451,26 @@ bool TargaImage::Dither_Bright()
 ///////////////////////////////////////////////////////////////////////////////
 bool TargaImage::Dither_Cluster()
 {
-    ClearToBlack();
-    return false;
+    const float ditherMatrix[4][4] = {
+        {0.7059f, 0.3529f, 0.5882f, 0.2353f},
+        {0.0588f, 0.9412f, 0.8235f, 0.4118f},
+        {0.4706f, 0.7647f, 0.8824f, 0.1176f},
+        {0.1765f, 0.5294f, 0.2941f, 0.6471f}
+    };
+    for (int i = 0; i < height; i++) {
+        for (int j = 0; j < width; j++) {
+
+            int pixelIndex = (i * width + j) * 4;
+            unsigned char red = (data[pixelIndex + RED]);
+            unsigned char green = (data[pixelIndex + GREEN]);
+            unsigned char blue = (data[pixelIndex + BLUE]);
+            unsigned char grayScale = (unsigned char)(0.299f * red + 0.587f * green + 0.114f * blue);
+            unsigned char threshold = ditherMatrix[i % 4][j % 4] * 255.0f;
+            unsigned char newValue = (grayScale >= threshold) ? 255 : 0;
+            data[pixelIndex + RED] = data[pixelIndex + GREEN] = data[pixelIndex + BLUE] = newValue;
+        }
+    }
+    return true;
 }// Dither_Cluster
 
 

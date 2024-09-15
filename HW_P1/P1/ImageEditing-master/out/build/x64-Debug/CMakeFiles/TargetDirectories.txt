@@ -1,0 +1,4 @@
+C:/Computer_Graphic_Project/CG_HW_Project/HW_P1/P1/ImageEditing-master/out/build/x64-Debug/CMakeFiles/ImageEditing.dir
+C:/Computer_Graphic_Project/CG_HW_Project/HW_P1/P1/ImageEditing-master/out/build/x64-Debug/CMakeFiles/libtarga.dir
+C:/Computer_Graphic_Project/CG_HW_Project/HW_P1/P1/ImageEditing-master/out/build/x64-Debug/CMakeFiles/edit_cache.dir
+C:/Computer_Graphic_Project/CG_HW_Project/HW_P1/P1/ImageEditing-master/out/build/x64-Debug/CMakeFiles/rebuild_cache.dir

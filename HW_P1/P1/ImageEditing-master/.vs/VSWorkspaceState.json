@@ -8,15 +8,10 @@
   "ExpandedNodes": [
     "",
     "\\build",
-    "\\build\\CMakeFiles",
-    "\\build\\CMakeFiles\\3.29.3",
-    "\\include\\FL",
-    "\\lib\\Debug",
-    "\\lib\\Release",
-    "\\out",
-    "\\out\\build",
+    "\\build\\Debug",
+    "\\Images",
     "\\src"
   ],
-  "SelectedNode": "\\src\\TargaImage.cpp",
+  "SelectedNode": "\\build\\ImageEditing.sln",
   "PreviewInSolutionExplorer": false
 }
