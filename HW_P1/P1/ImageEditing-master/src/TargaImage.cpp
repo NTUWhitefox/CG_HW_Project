@@ -642,12 +642,13 @@ enum paddingType {
     REPEAT_EDGE = 3
 };
 
-bool applyFilter(const std::vector<std::vector<float>>& filter, int filterSize, paddingType padding, TargaImage image) {
+bool applyFilter(const std::vector<std::vector<float>>& filter, int filterSize, paddingType padding, TargaImage &image) {
     auto Clamp = [](float Min, float Max, float val) {
         return std::min(Max, std::max(Min, val));
     };
     int halfSize = filterSize / 2, width = image.width, height = image.height;
     std::vector<unsigned char> newData(width * height * 4, 0);
+    cout << "start filtering ; size ="<< filter.size()<<" "<<filter[0].size() << endl;
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
             float redSum = 0.0f, greenSum = 0.0f, blueSum = 0.0f;
@@ -674,7 +675,6 @@ bool applyFilter(const std::vector<std::vector<float>>& filter, int filterSize, 
                     }
                     int pixelIndex = (nY * width + nX) * 4;
                     float filterValue = filter[dy + halfSize][dx + halfSize];
-
                     // Accumulate the weighted sum for each color channel
                     redSum += image.data[pixelIndex + RED] * filterValue;
                     greenSum += image.data[pixelIndex + GREEN] * filterValue;
@@ -692,11 +692,12 @@ bool applyFilter(const std::vector<std::vector<float>>& filter, int filterSize, 
             newData[currentIndex + ALPHA] = image.data[currentIndex + ALPHA];
         }
     }
+    cout << "end filtering" << endl;
     std::copy(newData.begin(), newData.end(), image.data);
     return true;
 }
 
-std::vector<std::vector<float>>& Tofilter(const float* filterData, int filterSize) {
+std::vector<std::vector<float>> Tofilter(const float* filterData, int filterSize) {
     std::vector<std::vector<float>> Filter(filterSize,std::vector<float>(filterSize));
     float sum = 0.0f;
     for (int i = 0; i < filterSize * filterSize; i++) {
@@ -756,6 +757,7 @@ bool TargaImage::Filter_Bartlett()
 ///////////////////////////////////////////////////////////////////////////////
 bool TargaImage::Filter_Gaussian()
 {
+
     ClearToBlack();
     return false;
 }// Filter_Gaussian
