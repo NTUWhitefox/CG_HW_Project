@@ -67,7 +67,6 @@ class TargaImage
         bool Double_Size();
         bool Resize(float scale);
         bool Rotate(float angleDegrees);
-
     private:
 	// helper function for format conversion
         void RGBA_To_RGB(unsigned char *rgba, unsigned char *rgb);

@@ -27,6 +27,7 @@ using namespace std;
 const int           RED             = 0;                // red channel
 const int           GREEN           = 1;                // green channel
 const int           BLUE            = 2;                // blue channel
+const int           ALPHA = 3;
 const unsigned char BACKGROUND[3]   = { 0, 0, 0 };      // background color
 
 
@@ -236,7 +237,7 @@ bool TargaImage::To_Grayscale()
                 (float)data[pixelIndex + BLUE] * grayCoef[BLUE];
             unsigned char gray = static_cast<unsigned char>(std::min(255.0f, std::max(0.0f, grayValue)));
             // Assign grayscale value to R, G, and B channels
-            data[pixelIndex + RED] = data[pixelIndex + GREEN] = data[pixelIndex + BLUE] = gray;
+            data[pixelIndex + RED] = data[pixelIndex + GREEN] = data[pixelIndex + BLUE] = grayValue;
         }
     }
 	return true;
@@ -259,8 +260,8 @@ bool TargaImage::Quant_Uniform()
             unsigned char quantizedBlue = (data[pixelIndex + BLUE] >> 6);
             // for visualization, we should convert back to 8bit
             data[pixelIndex + RED] = quantizedRed << 5;
-            data[pixelIndex + GREEN] = quantizedRed << 5;
-            data[pixelIndex + RED] = quantizedRed << 6;
+            data[pixelIndex + GREEN] = quantizedGreen << 5;
+            data[pixelIndex + BLUE] = quantizedBlue << 6;
         }
     }
     return true;
@@ -339,7 +340,7 @@ bool TargaImage::Dither_Threshold()
         unsigned char green = (data[pixelIndex + GREEN]);
         unsigned char blue = (data[pixelIndex + BLUE]);
         unsigned char grayscale = (unsigned char)(0.299f * red + 0.587f * green + 0.114f * blue);
-        unsigned char newValue = (grayscale >= 128) ? 255 : 0;
+        unsigned char newValue = (grayscale > 128) ? 255 : 0;
         //cout << newValue / 255;
         data[pixelIndex + RED] = data[pixelIndex + GREEN] = data[pixelIndex + BLUE] = newValue;
     }
@@ -378,39 +379,48 @@ bool TargaImage::Dither_Random()
 ///////////////////////////////////////////////////////////////////////////////
 bool TargaImage::Dither_FS()
 {
+    //this->To_Grayscale();
 
+    unsigned char* Olddata = (unsigned char*)malloc(width * height * 4 * sizeof(unsigned char));
     for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
             int pixelIndex = (i * width + j) * 4;
-            unsigned char red = data[pixelIndex + RED];
-            unsigned char green = data[pixelIndex + GREEN];
-            unsigned char blue = data[pixelIndex + BLUE];
-            unsigned char grayscale = (unsigned char)(0.299f * red + 0.587f * green + 0.114f * blue);
-            unsigned char newValue = (grayscale >= 128) ? 255 : 0;
-            float error = (float)grayscale - (float)newValue;
-            // Set the new color (black or white) for the pixel
-            data[pixelIndex + RED] = data[pixelIndex + GREEN] = data[pixelIndex + BLUE] = newValue;
-            // Propagate error to neighboring pixels
-            if (j + 1 < width) { // Right neighbor
-                int rightPixelIndex = (i * width + (j + 1)) * 4;
-                for (int c = 0; c < 3; c++)  data[rightPixelIndex + c] = std::min(255, std::max(0, data[rightPixelIndex + c] + (int)(error * 7.0f / 16.0f)));
-            }
-            if (i + 1 < height) { // Bottom neighbor
-                int bottomPixelIndex = ((i + 1) * width + j) * 4;
-                for (int c = 0; c < 3; c++) data[bottomPixelIndex + c] = std::min(255, std::max(0, data[bottomPixelIndex + c] + (int)(error * 5.0f / 16.0f)));;
-                if (j + 1 < width) { // Bottom-right neighbor
-                    int bottomRightPixelIndex = ((i + 1) * width + (j + 1)) * 4;
-                    for (int c = 0; c < 3; c++) data[bottomRightPixelIndex + c] = std::min(255, std::max(0, data[bottomRightPixelIndex + c] + (int)(error * 1.0f / 16.0f)));
+            for(int k = 0;k < 3;k++) Olddata[pixelIndex + k] = data[pixelIndex + k];
+        }
+    }
+    bool flag = 0;
+    auto Clamp = [](float Min, float Max, float val) {
+        return std::min(Max, std::max(Min, val));
+    };
+    for (int i = 0; i < height; i++, flag ^= 1) {
+        for (int j = ( flag ? (width - 1) : 0); j >= 0 && j < width; j += (flag? -1: 1)) {
+            int pixelIndex = (i * width + j) * 4;
+            float grayscale = (0.299f * Olddata[pixelIndex + RED] + 0.587f * Olddata[pixelIndex + GREEN] + 0.114f * Olddata[pixelIndex + BLUE]);
+            float newValue = ((grayscale / 256) > 0.5) ? 255 : 0;
+            for (int c = 0; c < 3; c++) {
+
+                data[pixelIndex + c] = newValue;
+                float error = grayscale - newValue;
+                if (j + 1 < width) {
+                    int rightPixelIndex = (i * width + (j + 1)) * 4;
+                    Olddata[rightPixelIndex + c] = Clamp(0.0f, 255.0f,Olddata[rightPixelIndex + c] + (error * 7.0f / 16.0f));
                 }
-            }
-            if (i + 1 < height && j > 0) { // Bottom-left neighbor
-                int bottomLeftPixelIndex = ((i + 1) * width + (j - 1)) * 4;
-                for (int c = 0; c < 3; c++) data[bottomLeftPixelIndex + c] = std::min(255, std::max(0, data[bottomLeftPixelIndex + c] + (int)(error * 3.0f / 16.0f)));
+                if (i + 1 < height) { // Bottom neighbor
+                    int bottomPixelIndex = ((i + 1) * width + j) * 4;
+                    Olddata[bottomPixelIndex + c] = Clamp(0.0f, 255.0f, Olddata[bottomPixelIndex + c] + (error * 5.0f / 16.0f));
+                    if (j + 1 < width) { // Bottom-right neighbor
+                        int bottomRightPixelIndex = ((i + 1) * width + (j + 1)) * 4;
+                        Olddata[bottomRightPixelIndex + c] = Clamp(0.0f, 255.0f, Olddata[bottomRightPixelIndex + c] + (int)(error * 1.0f / 16.0f));
+                    }
+                }
+                if (i + 1 < height && j > 0) { // Bottom-left neighbor
+                    int bottomLeftPixelIndex = ((i + 1) * width + (j - 1)) * 4;
+                    Olddata[bottomLeftPixelIndex + c] = Clamp(0.0f, 255.0f, Olddata[bottomLeftPixelIndex + c] + (int)(error * 3.0f / 16.0f));
+                }
             }
         }
     }
 
-    // Clean up the temporary buffer
     return true;
 }// Dither_FS
 
@@ -423,24 +433,27 @@ bool TargaImage::Dither_FS()
 ///////////////////////////////////////////////////////////////////////////////
 bool TargaImage::Dither_Bright()
 {
+    
     float avgBrightness = 0.0;
-    unsigned char* Gray = (unsigned char*)malloc(width * height * sizeof(unsigned char));
+    float* Gray = (float*)malloc(width * height * sizeof(float));
     for (int i = 0; i < width * height; i++) {
         int pixelIndex = i * 4;
         unsigned char red = (data[pixelIndex + RED]);
         unsigned char green = (data[pixelIndex + GREEN]);
         unsigned char blue = (data[pixelIndex + BLUE]);
-        Gray[i] = (unsigned char)(0.299f * red + 0.587f * green + 0.114f * blue);
+        Gray[i] = (0.299f * (float)red + 0.587f * (float)green + 0.114f * (float)blue) / 256.0f;
         avgBrightness += Gray[i];
     }
-    avgBrightness /= (width * height);
+    avgBrightness /= (float)(width * height);
 
     for (int i = 0; i < width * height; i++) {
         int pixelIndex = i * 4;
-        data[pixelIndex + RED] = data[pixelIndex + GREEN] = data[pixelIndex + BLUE] = (Gray[i] >= avgBrightness ? 255 : 0);
+        data[pixelIndex + RED] = data[pixelIndex + GREEN] = data[pixelIndex + BLUE] = (Gray[i] > avgBrightness ? 255 : 0);
     }
     free(Gray);
     return true;
+    
+    return true; // Operation successful
 }// Dither_Bright
 
 
@@ -617,16 +630,101 @@ bool TargaImage::Difference(TargaImage* pImage)
     return true;
 }// Difference
 
-
 ///////////////////////////////////////////////////////////////////////////////
 //
 //      Perform 5x5 box filter on this image.  Return success of operation.
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+enum paddingType {
+    ZERO_PADDING = 1,
+    MIRROR_PADDING = 2,
+    REPEAT_EDGE = 3
+};
+
+bool applyFilter(const std::vector<std::vector<float>>& filter, int filterSize, paddingType padding, TargaImage image) {
+    auto Clamp = [](float Min, float Max, float val) {
+        return std::min(Max, std::max(Min, val));
+    };
+    int halfSize = filterSize / 2, width = image.width, height = image.height;
+    std::vector<unsigned char> newData(width * height * 4, 0);
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            float redSum = 0.0f, greenSum = 0.0f, blueSum = 0.0f;
+
+            for (int dy = -halfSize; dy <= halfSize; dy++) {
+                for (int dx = -halfSize; dx <= halfSize; dx++) {
+                    int nX = x + dx;
+                    int nY = y + dy;
+
+                    switch (padding) {
+                    case ZERO_PADDING:
+                        if (nX < 0 || nX >= width || nY < 0 || nY >= height) {
+                            // If out of bounds, use zero for zero padding
+                            continue;
+                        }
+                        break;
+
+                    case MIRROR_PADDING:
+                        if (nX < 0) nX = -nX;
+                        if (nX >= width) nX = 2 * width - nX - 1;
+                        if (nY < 0) nY = -nY;
+                        if (nY >= height) nY = 2 * height - nY - 1;
+                        break;
+                    }
+                    int pixelIndex = (nY * width + nX) * 4;
+                    float filterValue = filter[dy + halfSize][dx + halfSize];
+
+                    // Accumulate the weighted sum for each color channel
+                    redSum += image.data[pixelIndex + RED] * filterValue;
+                    greenSum += image.data[pixelIndex + GREEN] * filterValue;
+                    blueSum += image.data[pixelIndex + BLUE] * filterValue;
+
+                }
+            } 
+
+            
+
+            int currentIndex = (y * width + x) * 4;
+            newData[currentIndex + RED] = static_cast<unsigned char>(Clamp(0.0f, 255.0f, redSum));
+            newData[currentIndex + GREEN] = static_cast<unsigned char>(Clamp(0.0f, 255.0f, greenSum));
+            newData[currentIndex + BLUE] = static_cast<unsigned char>(Clamp(0.0f, 255.0f, blueSum));
+            newData[currentIndex + ALPHA] = image.data[currentIndex + ALPHA];
+        }
+    }
+    std::copy(newData.begin(), newData.end(), image.data);
+    return true;
+}
+
+std::vector<std::vector<float>>& Tofilter(const float* filterData, int filterSize) {
+    std::vector<std::vector<float>> Filter(filterSize,std::vector<float>(filterSize));
+    float sum = 0.0f;
+    for (int i = 0; i < filterSize * filterSize; i++) {
+        sum += filterData[i];
+    }
+    if (sum != 0.0f) {
+        for (int i = 0; i < filterSize; i++) {
+            for (int j = 0; j < filterSize; j++) {
+                Filter[i][j] = filterData[i * filterSize + j] / sum;
+            }
+        }
+    }
+
+    return Filter;
+}
+
+
 bool TargaImage::Filter_Box()
 {
-    ClearToBlack();
-    return false;
+    static float filterData[25] = {
+        1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1
+    };
+    applyFilter(Tofilter(filterData, 5), 5, paddingType::ZERO_PADDING, *this);
+    return true;
 }// Filter_Box
 
 
@@ -638,8 +736,15 @@ bool TargaImage::Filter_Box()
 ///////////////////////////////////////////////////////////////////////////////
 bool TargaImage::Filter_Bartlett()
 {
-    ClearToBlack();
-    return false;
+    float filterData[25] = {
+        1, 2, 3, 2, 1,
+        2, 4, 6, 4, 2,
+        3, 6, 9, 6, 3,
+        2, 4, 6, 4, 2,
+        1, 2, 3, 2, 1
+    };
+    applyFilter(Tofilter(filterData, 5), 5, paddingType::ZERO_PADDING, *this);
+    return true;
 }// Filter_Bartlett
 
 
