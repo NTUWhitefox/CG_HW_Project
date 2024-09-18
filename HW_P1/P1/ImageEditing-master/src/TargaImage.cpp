@@ -235,7 +235,7 @@ bool TargaImage::To_Grayscale()
             float grayValue = (float)data[pixelIndex + RED] * grayCoef[RED] +
                 (float)data[pixelIndex + GREEN] * grayCoef[GREEN] +
                 (float)data[pixelIndex + BLUE] * grayCoef[BLUE];
-            unsigned char gray = static_cast<unsigned char>(std::min(255.0f, std::max(0.0f, grayValue)));
+            unsigned char grayClamped = static_cast<unsigned char>(std::min(255.0f, std::max(0.0f, grayValue)));
             // Assign grayscale value to R, G, and B channels
             data[pixelIndex + RED] = data[pixelIndex + GREEN] = data[pixelIndex + BLUE] = grayValue;
         }
@@ -298,7 +298,7 @@ bool TargaImage::Quant_Populosity()
     sort(Histogram, Histogram + 32768, greater<pair<int,int>>());
 
     int PopularSize = 0,cnt = 0;
-    for (int i = 0; i < 32768; i++) if (Histogram[i].first != 0) cnt++;
+    //for (int i = 0; i < 32768; i++) if (Histogram[i].first != 0) cnt++;
     //Debugging("TargalImage.cpp", 301, "Size : " + to_string(cnt));
     for (; PopularSize < 256; PopularSize++) if (Histogram[PopularSize].first == 0) break;
     for (int i = 0; i < width * height; i++) {
@@ -379,8 +379,55 @@ bool TargaImage::Dither_Random()
 ///////////////////////////////////////////////////////////////////////////////
 bool TargaImage::Dither_FS()
 {
-    //this->To_Grayscale();
-
+    this->To_Grayscale();
+    vector<float> oldData(width * height), newData(width * height);
+    for (int i = 0; i < height; i++) {
+        for (int j = 0; j < width; j++) {
+            int pixelIndex = (i * width + j);
+            oldData[pixelIndex] = 0.299f * data[pixelIndex*4 + RED] + 0.587 * data[pixelIndex*4 + GREEN] + 0.114f * data[pixelIndex*4 + BLUE];
+        }
+    }
+    bool flag = 0;
+    for (int i = 0; i < height; i++, flag ^= 1) {
+        for (int j = (flag ? (width - 1) : 0); j >= 0 && j < width; j += (flag ? -1 : 1)) {
+            int pixelIndex = (i * width + j);
+            float oldValue = oldData[pixelIndex];
+            float newValue = (oldValue > 128) ? 255 : 0;
+            newData[pixelIndex] = newValue;
+            float error = oldValue - newValue;
+            if (flag) {
+                if (j + 1 < width) {
+                    int rightPixelIndex = (i * width + (j + 1));
+                    oldData[rightPixelIndex] += (error * 7.0f / 16.0f);
+                }
+            }
+            else {
+                if (j - 1 >= 0) {
+                    int leftPixelIndex = (i * width + (j - 1));
+                    oldData[leftPixelIndex] += (error * 7.0f / 16.0f);
+                }
+            }
+            if (i + 1 < height) { // Bottom neighbor
+                int bottomPixelIndex = ((i + 1) * width + j);
+                oldData[bottomPixelIndex] += (error * 5.0f / 16.0f);
+                if (j + 1 < width) { // Bottom-right neighbor
+                    int bottomRightPixelIndex = ((i + 1) * width + (j + 1));
+                    oldData[bottomRightPixelIndex] += (error * 1.0f / 16.0f);
+                }
+            }
+            if (i + 1 < height && j > 0) { // Bottom-left neighbor
+                int bottomLeftPixelIndex = ((i + 1) * width + (j - 1));
+                oldData[bottomLeftPixelIndex] += (error * 3.0f / 16.0f);
+            }
+        }
+    }
+    for (int i = 0; i < height; i++) {
+        for (int j = 0; j < width; j++) {
+            int pixelIndex = (i * width + j);
+            data[pixelIndex*4 + RED] = data[pixelIndex*4 + GREEN] = data[pixelIndex*4 + BLUE] = newData[pixelIndex];
+        }
+    }
+    /*
     unsigned char* Olddata = (unsigned char*)malloc(width * height * 4 * sizeof(unsigned char));
     for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
@@ -398,7 +445,6 @@ bool TargaImage::Dither_FS()
             float grayscale = (0.299f * Olddata[pixelIndex + RED] + 0.587f * Olddata[pixelIndex + GREEN] + 0.114f * Olddata[pixelIndex + BLUE]);
             float newValue = ((grayscale / 256) > 0.5) ? 255 : 0;
             for (int c = 0; c < 3; c++) {
-
                 data[pixelIndex + c] = newValue;
                 float error = grayscale - newValue;
                 if (j + 1 < width) {
@@ -420,7 +466,7 @@ bool TargaImage::Dither_FS()
             }
         }
     }
-
+    */
     return true;
 }// Dither_FS
 
@@ -714,6 +760,18 @@ std::vector<std::vector<float>> Tofilter(const float* filterData, int filterSize
     return Filter;
 }
 
+std::vector<std::vector<float>> BionomialFilter(int filterSize) {
+    std::vector<float> binomialCoeffs(filterSize);
+    for (int i = 0; i < filterSize; i++) 
+        binomialCoeffs[i] = Binomial(filterSize - 1, i);
+    float* filterdata = new float[filterSize * filterSize];
+    for (int i = 0; i < filterSize; i++) 
+        for (int j = 0; j < filterSize; j++) 
+            filterdata[i * filterSize + j] = binomialCoeffs[i] * binomialCoeffs[j];
+    std::vector<std::vector<float>> result = Tofilter(filterdata, filterSize);
+    delete[] filterdata;
+    return result;
+}
 
 bool TargaImage::Filter_Box()
 {
@@ -757,9 +815,8 @@ bool TargaImage::Filter_Bartlett()
 ///////////////////////////////////////////////////////////////////////////////
 bool TargaImage::Filter_Gaussian()
 {
-
-    ClearToBlack();
-    return false;
+    applyFilter(BionomialFilter(5), 5, paddingType::ZERO_PADDING, *this);
+    return true;
 }// Filter_Gaussian
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -771,8 +828,8 @@ bool TargaImage::Filter_Gaussian()
 
 bool TargaImage::Filter_Gaussian_N( unsigned int N )
 {
-    ClearToBlack();
-   return false;
+    applyFilter(BionomialFilter(N), 5, paddingType::ZERO_PADDING, *this);
+    return true;
 }// Filter_Gaussian_N
 
 
