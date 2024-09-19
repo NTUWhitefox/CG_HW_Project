@@ -23,14 +23,7 @@
 
 using namespace std;
 
-// constants
-const int           RED             = 0;                // red channel
-const int           GREEN           = 1;                // green channel
-const int           BLUE            = 2;                // blue channel
-const int           ALPHA = 3;
 const unsigned char BACKGROUND[3]   = { 0, 0, 0 };      // background color
-
-
 // Computes n choose s, efficiently
 double Binomial(int n, int s)
 {
@@ -232,11 +225,7 @@ bool TargaImage::To_Grayscale()
     for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
             int pixelIndex = (i * width + j) * 4;
-            float grayValue = (float)data[pixelIndex + RED] * grayCoef[RED] +
-                (float)data[pixelIndex + GREEN] * grayCoef[GREEN] +
-                (float)data[pixelIndex + BLUE] * grayCoef[BLUE];
-            unsigned char grayClamped = static_cast<unsigned char>(std::min(255.0f, std::max(0.0f, grayValue)));
-            // Assign grayscale value to R, G, and B channels
+            float grayValue = RGBAtoGray(pixelIndex);
             data[pixelIndex + RED] = data[pixelIndex + GREEN] = data[pixelIndex + BLUE] = grayValue;
         }
     }
@@ -292,11 +281,9 @@ bool TargaImage::Quant_Populosity()
         unsigned char quantizedRed = (data[pixelIndex + RED] >> 3);
         unsigned char quantizedGreen = (data[pixelIndex + GREEN] >> 3);
         unsigned char quantizedBlue = (data[pixelIndex + BLUE] >> 3);
-
         Histogram[Flattening(quantizedRed, quantizedGreen, quantizedBlue, 32)].first++;
     }
     sort(Histogram, Histogram + 32768, greater<pair<int,int>>());
-
     int PopularSize = 0,cnt = 0;
     //for (int i = 0; i < 32768; i++) if (Histogram[i].first != 0) cnt++;
     //Debugging("TargalImage.cpp", 301, "Size : " + to_string(cnt));
@@ -306,7 +293,6 @@ bool TargaImage::Quant_Populosity()
         unsigned char origRed = data[pixelIndex];
         unsigned char origGreen = data[pixelIndex + 1];
         unsigned char origBlue = data[pixelIndex + 2];
-
         int minIndex = 0, minDis = 2147483640;
         for(int c = 0;c < PopularSize;c++) {
             int Dis = 0,colorValue = Histogram[c].second,r,g,b;
@@ -336,10 +322,7 @@ bool TargaImage::Dither_Threshold()
 {
     for (int i = 0; i < width * height; i++) {
         int pixelIndex = i * 4;
-        unsigned char red = (data[pixelIndex + RED]);
-        unsigned char green = (data[pixelIndex + GREEN]);
-        unsigned char blue = (data[pixelIndex + BLUE]);
-        unsigned char grayscale = (unsigned char)(0.299f * red + 0.587f * green + 0.114f * blue);
+        unsigned char grayscale = RGBAtoGray(pixelIndex);
         unsigned char newValue = (grayscale > 128) ? 255 : 0;
         //cout << newValue / 255;
         data[pixelIndex + RED] = data[pixelIndex + GREEN] = data[pixelIndex + BLUE] = newValue;
@@ -358,10 +341,7 @@ bool TargaImage::Dither_Random()
     srand((unsigned int)time(0));
     for (int i = 0; i < width * height; i++) {
         int pixelIndex = i * 4;
-        unsigned char red = (data[pixelIndex + RED]);
-        unsigned char green = (data[pixelIndex + GREEN]);
-        unsigned char blue = (data[pixelIndex + BLUE]);
-        unsigned char grayscale = (unsigned char)(0.299f * red + 0.587f * green + 0.114f * blue);
+        unsigned char grayscale = RGBAtoGray(pixelIndex);
         float randomNoise = ((float)rand() / RAND_MAX) * 0.4f - 0.2f;
         unsigned char randomThreshold = (0.5f - randomNoise) * 255.0f;
         unsigned char newValue = (grayscale >= randomThreshold) ? 255 : 0;
@@ -384,7 +364,8 @@ bool TargaImage::Dither_FS()
     for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
             int pixelIndex = (i * width + j);
-            oldData[pixelIndex] = 0.299f * data[pixelIndex*4 + RED] + 0.587 * data[pixelIndex*4 + GREEN] + 0.114f * data[pixelIndex*4 + BLUE];
+            oldData[pixelIndex] = RGBAtoGray(pixelIndex * 4); 
+            //0.299f * data[pixelIndex*4 + RED] + 0.587 * data[pixelIndex*4 + GREEN] + 0.114f * data[pixelIndex*4 + BLUE];
         }
     }
     bool flag = 0;
@@ -395,7 +376,7 @@ bool TargaImage::Dither_FS()
             float newValue = (oldValue > 128) ? 255 : 0;
             newData[pixelIndex] = newValue;
             float error = oldValue - newValue;
-            if (flag) {
+            if (!flag) {
                 if (j + 1 < width) {
                     int rightPixelIndex = (i * width + (j + 1));
                     oldData[rightPixelIndex] += (error * 7.0f / 16.0f);
@@ -427,46 +408,6 @@ bool TargaImage::Dither_FS()
             data[pixelIndex*4 + RED] = data[pixelIndex*4 + GREEN] = data[pixelIndex*4 + BLUE] = newData[pixelIndex];
         }
     }
-    /*
-    unsigned char* Olddata = (unsigned char*)malloc(width * height * 4 * sizeof(unsigned char));
-    for (int i = 0; i < height; i++) {
-        for (int j = 0; j < width; j++) {
-            int pixelIndex = (i * width + j) * 4;
-            for(int k = 0;k < 3;k++) Olddata[pixelIndex + k] = data[pixelIndex + k];
-        }
-    }
-    bool flag = 0;
-    auto Clamp = [](float Min, float Max, float val) {
-        return std::min(Max, std::max(Min, val));
-    };
-    for (int i = 0; i < height; i++, flag ^= 1) {
-        for (int j = ( flag ? (width - 1) : 0); j >= 0 && j < width; j += (flag? -1: 1)) {
-            int pixelIndex = (i * width + j) * 4;
-            float grayscale = (0.299f * Olddata[pixelIndex + RED] + 0.587f * Olddata[pixelIndex + GREEN] + 0.114f * Olddata[pixelIndex + BLUE]);
-            float newValue = ((grayscale / 256) > 0.5) ? 255 : 0;
-            for (int c = 0; c < 3; c++) {
-                data[pixelIndex + c] = newValue;
-                float error = grayscale - newValue;
-                if (j + 1 < width) {
-                    int rightPixelIndex = (i * width + (j + 1)) * 4;
-                    Olddata[rightPixelIndex + c] = Clamp(0.0f, 255.0f,Olddata[rightPixelIndex + c] + (error * 7.0f / 16.0f));
-                }
-                if (i + 1 < height) { // Bottom neighbor
-                    int bottomPixelIndex = ((i + 1) * width + j) * 4;
-                    Olddata[bottomPixelIndex + c] = Clamp(0.0f, 255.0f, Olddata[bottomPixelIndex + c] + (error * 5.0f / 16.0f));
-                    if (j + 1 < width) { // Bottom-right neighbor
-                        int bottomRightPixelIndex = ((i + 1) * width + (j + 1)) * 4;
-                        Olddata[bottomRightPixelIndex + c] = Clamp(0.0f, 255.0f, Olddata[bottomRightPixelIndex + c] + (int)(error * 1.0f / 16.0f));
-                    }
-                }
-                if (i + 1 < height && j > 0) { // Bottom-left neighbor
-                    int bottomLeftPixelIndex = ((i + 1) * width + (j - 1)) * 4;
-                    Olddata[bottomLeftPixelIndex + c] = Clamp(0.0f, 255.0f, Olddata[bottomLeftPixelIndex + c] + (int)(error * 3.0f / 16.0f));
-                }
-            }
-        }
-    }
-    */
     return true;
 }// Dither_FS
 
@@ -479,27 +420,24 @@ bool TargaImage::Dither_FS()
 ///////////////////////////////////////////////////////////////////////////////
 bool TargaImage::Dither_Bright()
 {
-    
     float avgBrightness = 0.0;
     float* Gray = (float*)malloc(width * height * sizeof(float));
     for (int i = 0; i < width * height; i++) {
         int pixelIndex = i * 4;
-        unsigned char red = (data[pixelIndex + RED]);
-        unsigned char green = (data[pixelIndex + GREEN]);
-        unsigned char blue = (data[pixelIndex + BLUE]);
-        Gray[i] = (0.299f * (float)red + 0.587f * (float)green + 0.114f * (float)blue) / 256.0f;
+        Gray[i] = RGBAtoGray(pixelIndex) / 256.0f;
         avgBrightness += Gray[i];
     }
-    avgBrightness /= (float)(width * height);
-
+    avgBrightness /= (width * height);
+    //Debugging("Targalimage.cpp", 431, "avg = " + to_string(avgBrightness));
+    sort(Gray, Gray + (width * height), greater<float>());
+    float Thresh = Gray[(int)(avgBrightness * (width * height))];
+    //Debugging("Targalimage.cpp", 431, "Thr = " + to_string(Thresh));
     for (int i = 0; i < width * height; i++) {
         int pixelIndex = i * 4;
-        data[pixelIndex + RED] = data[pixelIndex + GREEN] = data[pixelIndex + BLUE] = (Gray[i] > avgBrightness ? 255 : 0);
+        data[pixelIndex + RED] = data[pixelIndex + GREEN] = data[pixelIndex + BLUE] = ((RGBAtoGray(pixelIndex) / 256.0)  > Thresh ? 255 : 0);
     }
     free(Gray);
     return true;
-    
-    return true; // Operation successful
 }// Dither_Bright
 
 
@@ -520,10 +458,7 @@ bool TargaImage::Dither_Cluster()
         for (int j = 0; j < width; j++) {
 
             int pixelIndex = (i * width + j) * 4;
-            unsigned char red = (data[pixelIndex + RED]);
-            unsigned char green = (data[pixelIndex + GREEN]);
-            unsigned char blue = (data[pixelIndex + BLUE]);
-            unsigned char grayScale = (unsigned char)(0.299f * red + 0.587f * green + 0.114f * blue);
+            unsigned char grayScale = RGBAtoGray(pixelIndex);
             unsigned char threshold = ditherMatrix[i % 4][j % 4] * 255.0f;
             unsigned char newValue = (grayScale >= threshold) ? 255 : 0;
             data[pixelIndex + RED] = data[pixelIndex + GREEN] = data[pixelIndex + BLUE] = newValue;
@@ -688,22 +623,23 @@ enum paddingType {
     REPEAT_EDGE = 3
 };
 
-bool applyFilter(const std::vector<std::vector<float>>& filter, int filterSize, paddingType padding, TargaImage &image) {
+bool applyFilter(const std::vector<std::vector<float>>& filter, int filterSize, paddingType padding, unsigned char origData[],int width, int height) {
     auto Clamp = [](float Min, float Max, float val) {
         return std::min(Max, std::max(Min, val));
     };
-    int halfSize = filterSize / 2, width = image.width, height = image.height;
+    int halfSize = filterSize / 2;
+    int offSet = (filterSize % 2 == 0) ? 1 : 0;
     std::vector<unsigned char> newData(width * height * 4, 0);
-    cout << "start filtering ; size ="<< filter.size()<<" "<<filter[0].size() << endl;
+    //cout << "start filtering ; size ="<< filter.size()<<" "<<filter[0].size() << endl;
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
             float redSum = 0.0f, greenSum = 0.0f, blueSum = 0.0f;
 
-            for (int dy = -halfSize; dy <= halfSize; dy++) {
-                for (int dx = -halfSize; dx <= halfSize; dx++) {
+            for (int dy = -halfSize; dy <= halfSize - offSet; dy++) {
+                for (int dx = -halfSize; dx <= halfSize - offSet; dx++) {
                     int nX = x + dx;
                     int nY = y + dy;
-
+ 
                     switch (padding) {
                     case ZERO_PADDING:
                         if (nX < 0 || nX >= width || nY < 0 || nY >= height) {
@@ -722,24 +658,20 @@ bool applyFilter(const std::vector<std::vector<float>>& filter, int filterSize, 
                     int pixelIndex = (nY * width + nX) * 4;
                     float filterValue = filter[dy + halfSize][dx + halfSize];
                     // Accumulate the weighted sum for each color channel
-                    redSum += image.data[pixelIndex + RED] * filterValue;
-                    greenSum += image.data[pixelIndex + GREEN] * filterValue;
-                    blueSum += image.data[pixelIndex + BLUE] * filterValue;
+                    redSum += origData[pixelIndex + RED] * filterValue;
+                    greenSum += origData[pixelIndex + GREEN] * filterValue;
+                    blueSum += origData[pixelIndex + BLUE] * filterValue;
 
                 }
             } 
-
-            
-
             int currentIndex = (y * width + x) * 4;
             newData[currentIndex + RED] = static_cast<unsigned char>(Clamp(0.0f, 255.0f, redSum));
             newData[currentIndex + GREEN] = static_cast<unsigned char>(Clamp(0.0f, 255.0f, greenSum));
             newData[currentIndex + BLUE] = static_cast<unsigned char>(Clamp(0.0f, 255.0f, blueSum));
-            newData[currentIndex + ALPHA] = image.data[currentIndex + ALPHA];
+            newData[currentIndex + ALPHA] = origData[currentIndex + ALPHA];
         }
     }
-    cout << "end filtering" << endl;
-    std::copy(newData.begin(), newData.end(), image.data);
+    std::copy(newData.begin(), newData.end(), origData);
     return true;
 }
 
@@ -756,7 +688,6 @@ std::vector<std::vector<float>> Tofilter(const float* filterData, int filterSize
             }
         }
     }
-
     return Filter;
 }
 
@@ -782,7 +713,7 @@ bool TargaImage::Filter_Box()
         1, 1, 1, 1, 1,
         1, 1, 1, 1, 1
     };
-    applyFilter(Tofilter(filterData, 5), 5, paddingType::ZERO_PADDING, *this);
+    applyFilter(Tofilter(filterData, 5), 5, paddingType::ZERO_PADDING, this->data, width, height);
     return true;
 }// Filter_Box
 
@@ -802,7 +733,7 @@ bool TargaImage::Filter_Bartlett()
         2, 4, 6, 4, 2,
         1, 2, 3, 2, 1
     };
-    applyFilter(Tofilter(filterData, 5), 5, paddingType::ZERO_PADDING, *this);
+    applyFilter(Tofilter(filterData, 5), 5, paddingType::ZERO_PADDING, this->data, width, height);
     return true;
 }// Filter_Bartlett
 
@@ -815,7 +746,7 @@ bool TargaImage::Filter_Bartlett()
 ///////////////////////////////////////////////////////////////////////////////
 bool TargaImage::Filter_Gaussian()
 {
-    applyFilter(BionomialFilter(5), 5, paddingType::ZERO_PADDING, *this);
+    applyFilter(BionomialFilter(5), 5, paddingType::ZERO_PADDING, this->data, width, height);
     return true;
 }// Filter_Gaussian
 
@@ -828,7 +759,7 @@ bool TargaImage::Filter_Gaussian()
 
 bool TargaImage::Filter_Gaussian_N( unsigned int N )
 {
-    applyFilter(BionomialFilter(N), 5, paddingType::ZERO_PADDING, *this);
+    applyFilter(BionomialFilter(N), 5, paddingType::ZERO_PADDING, this->data, width, height);
     return true;
 }// Filter_Gaussian_N
 
@@ -905,10 +836,76 @@ bool TargaImage::Double_Size()
 //  assumed to be greater than one.  Return success of operation.
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+
 bool TargaImage::Resize(float scale)
 {
-    ClearToBlack();
-    return false;
+    int newHeight = static_cast<int>(height * scale);
+    int newWidth = static_cast<int>(width * scale);
+    static std::vector<std::vector<float>> filterEvenEven = {
+        { 1 / 16.0f, 1 / 8.0f, 1 / 16.0f, 0 },
+        { 1 / 8.0f,  1 / 4.0f, 1 / 8.0f, 0  },
+        { 1 / 16.0f, 1 / 8.0f, 1 / 16.0f, 0 },
+        { 0, 0, 0, 0 }
+    };
+    static std::vector<std::vector<float>> filterOddOdd = {
+        { 1 / 64.0f, 3 / 64.0f, 3 / 64.0f, 1 / 64.0f },
+        { 3 / 64.0f, 9 / 64.0f, 9 / 64.0f, 3 / 64.0f },
+        { 3 / 64.0f, 9 / 64.0f, 9 / 64.0f, 3 / 64.0f },
+        { 1 / 64.0f, 3 / 64.0f, 3 / 64.0f, 1 / 64.0f }
+    };
+    static std::vector<std::vector<float>> filterEvenOdd = {
+        { 1 / 32.0f, 2 / 32.0f, 1 / 32.0f, 0},
+        { 3 / 32.0f, 6 / 32.0f, 3 / 32.0f, 0},
+        { 3 / 32.0f, 6 / 32.0f, 3 / 32.0f, 0},
+        { 1 / 32.0f, 2 / 32.0f, 1 / 32.0f, 0}
+    };
+    static std::vector<std::vector<float>> filterOddEven = {
+        { 1 / 64.0f, 3 / 64.0f, 3 / 64.0f, 1 / 64.0f },
+        { 2 / 64.0f, 6 / 64.0f, 6 / 64.0f, 2 / 64.0f },
+        { 1 / 64.0f, 3 / 64.0f, 3 / 64.0f, 1 / 64.0f },
+        { 0, 0, 0, 0 }
+    };
+    
+    unsigned char* resizedData = new unsigned char[newHeight * newWidth * 4];
+    for (int i = 0; i < newHeight; i++) {
+        for (int j = 0; j < newWidth; j++) {
+            // Map the pixel to the original image
+            int srcX = static_cast<int>(j / scale);
+            int srcY = static_cast<int>(i / scale);
+            // Select the correct filter based on the pixel position (even/odd)
+            std::vector<std::vector<float>> selectedFilter;
+            if (i % 2 == 0 && j % 2 == 0) 
+                selectedFilter = filterEvenEven;
+            else if (i % 2 == 1 && j % 2 == 1) 
+                selectedFilter = filterOddOdd;
+            else if (i % 2 == 0 && j % 2 == 1) 
+                selectedFilter = filterEvenOdd;
+            else if (i % 2 == 1 && j % 2 == 0) 
+                selectedFilter = filterOddEven;
+            // Apply the filter
+            for (int c = 0; c < 4; c++) {
+                float sum = 0.0f;
+                for (int dy = 0; dy < 4; dy++) {
+                    for (int dx = 0; dx < 4; dx++) {
+                        int neighborX = srcX + dx - 1;
+                        int neighborY = srcY + dy - 1;
+                        if (neighborX >= 0 && neighborX < width && neighborY >= 0 && neighborY < height) {
+                            sum += data[(neighborY * width + neighborX) * 4 + c] * selectedFilter[dy][dx];
+                        }
+                    }
+                }
+                // Set the filtered pixel value in resized data
+                resizedData[(i * newWidth + j) * 4 + c] = static_cast<unsigned char>(sum);
+            }
+        }
+    }
+    delete[] data;
+    data = resizedData;
+    //std::copy(resizedData, resizedData + newHeight * newWidth * 4, data);
+    width = newWidth;
+    height = newHeight;
+    return true;
 }// Resize
 
 

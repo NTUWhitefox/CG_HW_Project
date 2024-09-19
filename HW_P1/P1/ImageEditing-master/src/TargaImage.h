@@ -19,6 +19,12 @@
 class Stroke;
 class DistanceImage;
 
+// constants
+const int           RED = 0;                // red channel
+const int           GREEN = 1;                // green channel
+const int           BLUE = 2;                // blue channel
+const int           ALPHA = 3;
+
 class TargaImage
 {
     // methods
@@ -85,6 +91,16 @@ class TargaImage
 
     //Gray scale converting multiplyer
         float grayCoef[3] = { 0.299f, 0.587f, 0.144f };
+        float RGBAtoGray(int Idx) {
+            return data[Idx + RED] * grayCoef[RED] + data[Idx + GREEN] * grayCoef[GREEN] + data[Idx + BLUE] * grayCoef[BLUE];
+        }
+        float RGBAtoGray(int i,int j) {
+            int Idx = (i * width + j) * 4;
+            return data[Idx + RED] * grayCoef[RED] + data[Idx + GREEN] * grayCoef[GREEN] + data[Idx + BLUE] * grayCoef[BLUE];
+        }
+        float RGBAtoGray(unsigned char R, unsigned char G, unsigned char B) {
+            return R * grayCoef[RED] + G * grayCoef[GREEN] + B * grayCoef[BLUE];
+        }
  
     // members
     public:
