@@ -87,7 +87,7 @@ class TargaImage
         void Paint_Stroke(const Stroke& s);
 
     //Get path of the image;
-        static char* GetLoadPath(char* filename);
+        //static char* GetLoadPath(char* filename);
 
     //Gray scale converting multiplyer
         float grayCoef[3] = { 0.299f, 0.587f, 0.144f };

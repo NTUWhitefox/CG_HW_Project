@@ -20,6 +20,7 @@
 #include <sstream>
 #include <vector>
 #include <algorithm>
+#include <direct.h>
 
 using namespace std;
 
@@ -142,23 +143,30 @@ unsigned char* TargaImage::To_RGB(void)
 ///////////////////////////////////////////////////////////////////////////////
 bool TargaImage::Save_Image(const char *filename)
 {
+    char* CWD;
+    CWD = getcwd(NULL, 0);
+    static const char* path = "\\..\\..\\Images\\saved\\";
+    char* fullPath = (char*)malloc(strlen(CWD) + strlen(path) + strlen(filename) + 1);
+    strcpy(fullPath, CWD);
+    strcat(fullPath, path);
+    strcat(fullPath, filename);
+    //cout << fullPath << endl;
     TargaImage	*out_image = Reverse_Rows();
 
     if (! out_image)
 	    return false;
 
-    if (!tga_write_raw(filename, width, height, out_image->data, TGA_TRUECOLOR_32))
+    if (!tga_write_raw(fullPath, width, height, out_image->data, TGA_TRUECOLOR_32))
     {
 	    cout << "TGA Save Error: %s\n", tga_error_string(tga_get_last_error());
 	    return false;
     }
-
+    free(fullPath);
+    free(CWD);
     delete out_image;
 
     return true;
 }// Save_Image
-
-
 ///////////////////////////////////////////////////////////////////////////////
 //
 //      Load a targa image from a file.  Return a new TargaImage object which 
@@ -166,31 +174,32 @@ bool TargaImage::Save_Image(const char *filename)
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-char* TargaImage::GetLoadPath(char* filename) {
-    const char* basePath = "C:\\Computer_Graphic_Project\\CG_HW_Project\\HW_P1\\P1\\ImageEditing-master\\Images\\load\\";
-    char* fullPath = (char*)malloc(strlen(basePath) + strlen(filename) + 1);
-    strcpy(fullPath, basePath);
-    strcat(fullPath, filename);
-    return fullPath;;
- }
-
 
 TargaImage* TargaImage::Load_Image(char *filename)
 {
+
     unsigned char   *temp_data;
     TargaImage	    *temp_image;
     TargaImage	    *result;
     int		        width, height;
 
+    char* CWD;
+    CWD = getcwd(NULL, 0);
+    static const char* path = "\\..\\..\\Images\\load\\";
     if (!filename)
     {
         cout << "No filename given." << endl;
         return NULL;
     }// if
-    char* FilePath = GetLoadPath(filename);
+
+    char* fullPath = (char*)malloc(strlen(CWD) + strlen(path) + strlen(filename) + 1);
+    strcpy(fullPath,CWD);
+    strcat(fullPath, path);
+    strcat(fullPath, filename);
+
     //printf("file name %s\n", FilePath);
 
-    temp_data = (unsigned char*)tga_load(FilePath, &width, &height, TGA_TRUECOLOR_32);
+    temp_data = (unsigned char*)tga_load(fullPath, &width, &height, TGA_TRUECOLOR_32);
     if (!temp_data)
     {
         cout << "TGA Error : %s\n" << tga_error_string(tga_get_last_error()) << endl;
@@ -199,11 +208,10 @@ TargaImage* TargaImage::Load_Image(char *filename)
     }
     temp_image = new TargaImage(width, height, temp_data);
     free(temp_data);
-    //cout << "SizeDebug" << width << " " << height << endl;
     result = temp_image->Reverse_Rows();
-
     delete temp_image;
-    free(FilePath);
+    free(fullPath);
+    free(CWD);
     return result;
 }// Load_Image
 
@@ -365,7 +373,6 @@ bool TargaImage::Dither_FS()
         for (int j = 0; j < width; j++) {
             int pixelIndex = (i * width + j);
             oldData[pixelIndex] = RGBAtoGray(pixelIndex * 4); 
-            //0.299f * data[pixelIndex*4 + RED] + 0.587 * data[pixelIndex*4 + GREEN] + 0.114f * data[pixelIndex*4 + BLUE];
         }
     }
     bool flag = 0;
@@ -619,8 +626,8 @@ bool TargaImage::Difference(TargaImage* pImage)
 
 enum paddingType {
     ZERO_PADDING = 1,
-    MIRROR_PADDING = 2,
-    REPEAT_EDGE = 3
+    MIRROR_PADDING = 2
+    //REPEAT_EDGE = 3
 };
 
 bool applyFilter(const std::vector<std::vector<float>>& filter, int filterSize, paddingType padding, unsigned char origData[],int width, int height) {

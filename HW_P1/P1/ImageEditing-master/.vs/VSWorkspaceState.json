@@ -10,6 +10,7 @@
     "\\build",
     "\\build\\Debug",
     "\\Images",
+    "\\Images\\saved",
     "\\src"
   ],
   "SelectedNode": "\\src\\TargaImage.cpp",
