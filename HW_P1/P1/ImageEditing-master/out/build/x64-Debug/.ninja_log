@@ -16,3 +16,8 @@
 24	598	7480927954166171	CMakeFiles/ImageEditing.dir/src/ScriptHandler.cpp.obj	cec520d2812354b4
 18	679	7480927954985022	CMakeFiles/ImageEditing.dir/src/ImageWidget.cpp.obj	e7b05a97e42c5e82
 12	817	7480927956347032	CMakeFiles/ImageEditing.dir/src/Main.cpp.obj	5c728e637bad23eb
+31	746	7485891998116558	CMakeFiles/ImageEditing.dir/src/ImageWidget.cpp.obj	e7b05a97e42c5e82
+37	754	7485891998196290	CMakeFiles/ImageEditing.dir/src/ScriptHandler.cpp.obj	cec520d2812354b4
+43	773	7485891998395624	CMakeFiles/ImageEditing.dir/src/TargaImage.cpp.obj	a85d5f5620aee988
+24	873	7485891999402252	CMakeFiles/ImageEditing.dir/src/Main.cpp.obj	5c728e637bad23eb
+874	1132	7485892001395583	ImageEditing.exe	5e7d20f1b3144550

@@ -1,0 +1,8 @@
+1. All project-related resources are in the "projectFile"
+
+2. Run "Run_this" to run the application. It is a shortcut to "\ntuB12705015-ImageEditing-1\projectFile\build\Debug\ImageEditing.exe", where the executable file is.
+
+3. Soource codes are in the src. What I have modified are "TargaImage.h" and "TargalImage.cpp" 
+
+4. notice that image is load from \images\load and szve to \images\saved. when saving a file, add ".tga" manually. 
+

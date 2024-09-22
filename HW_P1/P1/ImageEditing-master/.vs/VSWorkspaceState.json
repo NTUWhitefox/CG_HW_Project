@@ -11,8 +11,8 @@
     "\\build\\Debug",
     "\\Images",
     "\\Images\\saved",
-    "\\src"
+    "\\out"
   ],
-  "SelectedNode": "\\src\\TargaImage.cpp",
+  "SelectedNode": "\\build\\ImageEditing.sln",
   "PreviewInSolutionExplorer": false
 }
