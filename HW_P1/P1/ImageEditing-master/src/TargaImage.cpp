@@ -145,7 +145,7 @@ bool TargaImage::Save_Image(const char *filename)
 {
     char* CWD;
     CWD = getcwd(NULL, 0);
-    static const char* path = "\\..\\..\\Images\\saved\\";
+    static const char* path = "\\..\\Images\\saved\\";
     char* fullPath = (char*)malloc(strlen(CWD) + strlen(path) + strlen(filename) + 1);
     strcpy(fullPath, CWD);
     strcat(fullPath, path);
@@ -185,7 +185,7 @@ TargaImage* TargaImage::Load_Image(char *filename)
 
     char* CWD;
     CWD = getcwd(NULL, 0);
-    static const char* path = "\\..\\..\\Images\\load\\";
+    static const char* path = "\\..\\Images\\load\\";
     if (!filename)
     {
         cout << "No filename given." << endl;

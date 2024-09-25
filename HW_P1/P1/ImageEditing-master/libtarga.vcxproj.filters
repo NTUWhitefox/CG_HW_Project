@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="C:\CG2024fall\CG_HW_Project\HW_P1\P1\ImageEditing-master\src\libtarga.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="C:\CG2024fall\CG_HW_Project\HW_P1\P1\ImageEditing-master\src\libtarga.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\CG2024fall\CG_HW_Project\HW_P1\P1\ImageEditing-master\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{CFAA48CF-8BA5-3171-A0DF-C2642900228D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{1BD3EBB8-A912-368F-B673-C6C695D8B448}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
