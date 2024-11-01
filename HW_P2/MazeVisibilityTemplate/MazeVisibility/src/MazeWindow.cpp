@@ -52,7 +52,7 @@ Set_Maze(Maze *m)
 {
 	// Change the maze
 	maze = m;
-
+	m->viewAspect = (float)w()/(float)h();
 	// Force a redraw
 	redraw();
 }

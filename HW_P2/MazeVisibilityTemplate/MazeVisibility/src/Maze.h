@@ -51,18 +51,30 @@ class MazeException {
 //   at z = 1.
 //
 //************************************************************************
-float DEGtoRAD(float DEG) {
-	return DEG * PI / 180.0;
-}
-float RADtoDEG(float RAD) {
-	return RAD * 180.0 / PI;
-}
+const float PI = 3.14159265358979323846f;
+//float DEGtoRAD(float DEG) {
+//	return DEG * PI / 180.0;
+//}
+//float RADtoDEG(float RAD) {
+//	return RAD * 180.0 / PI;
+//}
+#define DEGtoRAD(DEG) (float)((DEG) * PI / 180.0)
+#define RADtoDEG(RAD) (float)((RAD) * 180.0 / PI)
 struct Point2D {
 	float x, y;
 };
 struct Ray2D{//clipping near is viewer and far is infinity, so two sides of frustum is two rays. 
 	Point2D startPoint;
 	float angle;
+	Ray2D(){};
+	Ray2D(Point2D startPoint, Point2D endPoint) {
+		this->startPoint = startPoint;
+		this->angle = atan2(endPoint.y - startPoint.y, endPoint.x - startPoint.x);
+	}
+	Ray2D(Point2D startPoint, float angle) {
+		this->startPoint = startPoint;
+		this->angle = angle;
+	}
 };
 struct ParametricLine {//parametrize ray(0<t<inf) and segment(0<s<1)
 	Point2D startPoint;
@@ -83,20 +95,21 @@ struct ParametricLine {//parametrize ray(0<t<inf) and segment(0<s<1)
 	}
 };
 struct Frustum {
-	float rotationDeg, FOV;//in degree
-	float focalDistance;
+	float rotationDeg;//in degree
+	Ray2D leftRay, rightRay;//the frustum here is not necessarily symmetric, so we need two rays to represent it
 	Point2D viewerPos;
 	Ray2D getLeftRay() {
-		return  {viewerPos, DEGtoRAD(rotationDeg - FOV / 2)};
+		return leftRay;
 	}
 	Ray2D getRightRay() {
-		return  {viewerPos, DEGtoRAD(rotationDeg + FOV / 2)};
+		return  rightRay;
 	}
-	Frustum(Point2D viewerPos, Point2D leftPoint, Point2D rightPoint, float focalDistance) {//construct a new frustum from three points
+	Frustum(){};
+	Frustum(Point2D viewerPos, Point2D leftPoint, Point2D rightPoint, Frustum oldFrustum) {//construct a new frustum from old frustum and two pointshree points
 		this->viewerPos = viewerPos;
-		this->focalDistance = focalDistance;
-		this->FOV = RADtoDEG(atan2(leftPoint.y - viewerPos.y, leftPoint.x - viewerPos.x) - atan2(rightPoint.y - viewerPos.y, rightPoint.x - viewerPos.x));
-		this->rotationDeg = RADtoDEG(atan2(leftPoint.y - viewerPos.y, leftPoint.x - viewerPos.x));
+		leftRay = Ray2D(viewerPos, leftPoint);
+		rightRay = Ray2D(viewerPos, rightPoint);
+		rotationDeg = oldFrustum.rotationDeg;
 	}
 };
 class Maze {
@@ -146,6 +159,7 @@ class Maze {
 		// THIS IS THE FUINCTION YOU SHOULD MODIFY.
 		void	Draw_View(const float);
 		void    Draw_Cell(Cell* C, Frustum F);//recursive visiblity also called "Cell and Portal visibility" algorithm
+		
 
 		// Save the maze to a file of the given name.
 		bool	Save(const char*);
@@ -164,6 +178,8 @@ class Maze {
 		void    Build_Maze(void);
 		void    Set_Extents(void);
 		void    Find_View_Cell(Cell*);
+		void    drawWallFromEdge(Point2D P1, Point2D P2, float color[3], Frustum frustum);
+		void 	setMatrix(Frustum frustum);
 
 	private:
 		Cell				*view_cell;// The cell that currently contains the view
@@ -200,6 +216,8 @@ class Maze {
 											// looking. Measured in degrees about the z
 											// axis, in the usual way.
 		float		viewer_fov;			// The horizontal field of view, in degrees.
+
+		float viewAspect = -1.0f;
 };
 
 
