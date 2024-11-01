@@ -1,13 +1,13 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <CustomBuild Include="C:\CG2024fall\CG_HW_Project\HW_P2\MazeVisibilityTemplate\MazeVisibility\CMakeFiles\236ee036d888f8dda4a47b1e4a79f6e9\generate.stamp.rule">
+    <CustomBuild Include="C:\Computer_Graphic_Project\CG_HW_Project\HW_P2\MazeVisibilityTemplate\MazeVisibility\CMakeFiles\2489cef4e0c943d5a339f78a41f5c71f\generate.stamp.rule">
       <Filter>CMake Rules</Filter>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="CMake Rules">
-      <UniqueIdentifier>{43DDD001-F3C9-37D6-A246-BA4729345B50}</UniqueIdentifier>
+      <UniqueIdentifier>{688DEBBD-2C57-3FCC-A1C6-0F0438409CCF}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

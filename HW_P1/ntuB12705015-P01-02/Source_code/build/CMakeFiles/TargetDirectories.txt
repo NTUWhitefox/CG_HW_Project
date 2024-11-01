@@ -1,0 +1,4 @@
+C:/Computer_Graphic_Project/CG_HW_Project/HW_P1/P1/ImageEditing-master/build/CMakeFiles/ImageEditing.dir
+C:/Computer_Graphic_Project/CG_HW_Project/HW_P1/P1/ImageEditing-master/build/CMakeFiles/libtarga.dir
+C:/Computer_Graphic_Project/CG_HW_Project/HW_P1/P1/ImageEditing-master/build/CMakeFiles/ALL_BUILD.dir
+C:/Computer_Graphic_Project/CG_HW_Project/HW_P1/P1/ImageEditing-master/build/CMakeFiles/ZERO_CHECK.dir

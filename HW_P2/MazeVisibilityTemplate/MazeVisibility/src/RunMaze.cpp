@@ -93,6 +93,7 @@ static void Load_Callback(Fl_Widget *widget, void *data)
 
 	// We use C++ exception handling here because there is no other sensible
 	// way to return an error message from the constructor.
+
 	try  {
 		new_maze = new Maze(filename);
 	}

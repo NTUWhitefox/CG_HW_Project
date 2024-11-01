@@ -22,8 +22,9 @@
 #include <Fl/gl.h>
 #include <GL/glu.h>
 #include <stdio.h>
+#include <windows.h>
 
-
+float aspect;
 //*************************************************************************
 //
 // * Constructor
@@ -143,8 +144,7 @@ Drag(float dt)
 		float dist;
 
 		// Set the viewing direction based on horizontal mouse motion.
-		maze->Set_View_Dir(d_down + 360.0f * dx / (float)w());
-
+		maze->Set_View_Dir(fmod(d_down + 360.0f * dx / (float)w(),360.0f));
 		// Set the viewer's linear motion based on a speed (derived from
 		// vertical mouse motion), the elapsed time and the viewing direction.
 		dist = 10.0f * dt * dy / (float)h();
@@ -190,12 +190,10 @@ Update(float dt)
 //=========================================================================
 {
 	// Update the view
-
 	if ( down || z_key ) // Only do anything if the mouse button is down.
 		return Drag(dt);
 	if ( keyDown )
 		return KeyEvent(dt);
-	
 	// Nothing changed, so no need for a redraw.
 	return false;
 }

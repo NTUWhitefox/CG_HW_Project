@@ -1,0 +1,10 @@
+^C:\COMPUTER_GRAPHIC_PROJECT\CG_HW_PROJECT\HW_P1\P1\IMAGEEDITING-MASTER\CMAKELISTS.TXT
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Computer_Graphic_Project/CG_HW_Project/HW_P1/P1/ImageEditing-master -BC:/Computer_Graphic_Project/CG_HW_Project/HW_P1/P1/ImageEditing-master/build --check-stamp-file C:/Computer_Graphic_Project/CG_HW_Project/HW_P1/P1/ImageEditing-master/build/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

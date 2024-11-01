@@ -24,6 +24,7 @@
 #include <time.h>
 #include <FL/Fl.h>
 #include <FL/fl_draw.h>
+#include <vector>
 
 const char Maze::X = 0;
 const char Maze::Y = 1;
@@ -85,9 +86,9 @@ Maze(const char *filename)
 	int	    i;
 
 	// Open the file
+
 	if ( ! ( f = fopen(filename, "r") ) )
 		throw new MazeException("Maze: Couldn't open file");
-
 	// Get the total number of vertices
 	if ( fscanf(f, "%d", &num_vertices) != 1 )
 		throw new MazeException("Maze: Couldn't read number of vertices");
@@ -620,22 +621,203 @@ Draw_Map(int min_x, int min_y, int max_x, int max_y)
 		}
 }
 
+/*
+Whitefox's personal space: my own function is written here: start
+*/
+const float PI = 3.14159265358979323846;
 
+struct Point3D {
+	float x, y, z;
+};
+
+Point2D RaySegIntersect(const Ray2D ray,const Point2D P1,const Point2D P2 , bool& isIntersect) {
+	//check parallel
+	ParametricLine l1(ray), l2(P1, P2);
+	if (fabs(l1.dx * l2.dy - l2.dx * l1.dy) <= 0.000001) {
+		isIntersect = false;
+		return  {-1e9,-1e9};
+	}
+	float t = (l2.dx * (l1.startPoint.y - l2.startPoint.y) - l2.dy * (l1.startPoint.x - l2.startPoint.x)) / (l2.dy * l1.dx - l2.dx * l1.dy);
+	float s = (l1.dx * (l1.startPoint.y - l2.startPoint.y) - l1.dy * (l1.startPoint.x - l2.startPoint.x)) / (l2.dy * l1.dx - l2.dx * l1.dy);
+	if (t >= 0 && s >= 0 && s <= 1) {
+		isIntersect = true;
+		return {l1.startPoint.x + t * l1.dx, l1.startPoint.y + t * l1.dy};
+	} else {
+		isIntersect = false;
+		return {-1e9,-1e9};
+	}
+}
+
+float sideTest(ParametricLine line, Point2D point) {//left: 1, right: -1, on: 0
+	return line.dx * (point.y - line.startPoint.y) - line.dy * (point.x - line.startPoint.x);
+}
+float frontTest(ParametricLine line, Point2D point) {//front: 1, back: -1, on: 0
+	return (point.x - line.startPoint.x) * line.dx + (point.y - line.startPoint.y) * line.dy;
+}
+
+bool clipToFrustum(const Edge* e,Frustum f,Point2D& resP1, Point2D& resP2,bool debugMode) {
+	Point2D p1 = {e->endpoints[0]->posn[0], e->endpoints[0]->posn[1]};
+	Point2D p2 = {e->endpoints[1]->posn[0], e->endpoints[1]->posn[1]};
+    bool isIntersectL = 0,isIntersectR = 0;
+    // Define left and right rays from the frustum parameters
+    Ray2D leftRay = f.getLeftRay();
+    Ray2D rightRay = f.getRightRay();
+	ParametricLine leftPara = ParametricLine(leftRay);
+	ParametricLine rightPara = ParametricLine(rightRay);
+	//check inside outside by cross product
+	if(debugMode) {
+		//printf("wut1 %f, %f, %f, %f\n",sideTest(leftPara, p1), sideTest(rightPara, p1), frontTest(leftPara, p1), frontTest(rightPara, p1));
+		//printf("wut2 %f, %f, %f, %f\n",sideTest(leftPara, p2), sideTest(rightPara, p2), frontTest(leftPara, p2), frontTest(rightPara, p2));
+	}
+	bool p1Inside = sideTest(leftPara, p1) * sideTest(rightPara, p1) < 0 && frontTest(leftPara, p1) > 0 && frontTest(rightPara, p1) > 0;
+	bool p2Inside = sideTest(leftPara, p2) * sideTest(rightPara, p2) < 0 && frontTest(leftPara, p2) > 0 && frontTest(rightPara, p2) > 0;
+	Point2D intersectL = RaySegIntersect(leftRay, p1, p2, isIntersectL);
+	Point2D intersectR = RaySegIntersect(rightRay, p1, p2, isIntersectR);
+	if(debugMode) {
+		//printf("edgeN: %d, p1Inside: %d, p2Inside: %d, isIntersectL: %d, isIntersectR: %d\n",e->index, p1Inside, p2Inside, isIntersectL, isIntersectR);
+	}
+	if(p1Inside && p2Inside) {
+		resP1 = p1;
+		resP2 = p2;
+		return true;
+	}
+	if(!p1Inside && !p2Inside) {
+		//edge may across the frustum
+		if(isIntersectL && isIntersectR) {
+			if(debugMode) printf("case2\n");
+			resP1 = intersectL;
+			resP2 = intersectR;
+			return true;
+		}
+		if(debugMode) printf("case3\n");
+		return false;
+	}
+	if(p1Inside && !p2Inside) {
+		if(debugMode) printf("case4\n");
+		resP1 = p1;
+		if(isIntersectL) resP2 = intersectL;
+		else resP2 = intersectR;
+		return true;
+	}
+	if(!p1Inside && p2Inside) {
+		if(debugMode) printf("case5\n");
+		resP1 = p2;
+		if(isIntersectR) resP2 = intersectR;
+		else resP2 = intersectL;
+		return true;
+	}
+	return false;
+}
+bool framePeriod(int frameCnt, int perFrame) {
+	return (frameCnt % perFrame) == 0;
+}
+
+void drawWallFromEdge(Point2D P1, Point2D P2, float color[3], Frustum frustum) {//
+	// In world space the wall is (P1.x,P1.y,-1),(P1.x,P1.y,1), (P2.x,P2.y,1),(P2.x,P2.y,-1), which is a rectangle
+	//viewer's z coordinate is always 0
+	//Draw in perspective projection matrix
+	Point3D viewerPos = {frustum.viewerPos.x, frustum.viewerPos.y, 0};
+	
+}
+
+void Maze::Draw_Cell(Cell *C, Frustum F) {
+	if(C->counter == frame_num) return;
+	
+	C->counter = frame_num; // used to prevent drawing repeatly in the same frame
+	for(int i = 0;i < 4;i++) {
+		Edge *E = C->edges[i];
+		if(E->opaque) {
+			Point2D P1, P2;
+			if(clipToFrustum(E, F, P1, P2, 0)) drawWallFromEdge(P1, P2, E->color, F);
+		}
+		else {
+			Point2D P1, P2;
+			if(clipToFrustum(E, F, P1, P2, 0)) {
+				Frustum newF(F.viewerPos, P1, P2, F.focalDistance);//construct new frustum from the viewer's pos, P1, P2
+				Draw_Cell(E->Neighbor(C),newF);
+			}
+		}
+	}
+}
+/*
+Whitefox's personal space: my own function is written here: end
+*/
 //**********************************************************************
 //
 // * Draws the first-person view of the maze. It is passed the focal distance.
 //   THIS IS THE FUINCTION YOU SHOULD MODIFY.
 //======================================================================
+/*################################################################### TO DO later
+	Draw Cell(cell C frustum F){ 
+		for each cell edge E{ 
+			if E is opaque{
+				E' = clip E to F draw E'
+				draw E'
+
+			}	
+			if E is transparent{
+				E' = clip E to F
+				F' = F restricted to E'
+				Draw_Cell(neighbor(C,E),F')
+			}
+		}
+	}
+	###################################################################*/
 void Maze::
 Draw_View(const float focal_dist)
 //======================================================================
 {
 	frame_num++;
 
-	//###################################################################
-	// TODO
-	// The rest is up to you!
-	//###################################################################
+	/*
+	if(frame_num == 0) {
+		printf("num edges : %d", this->num_edges);
+		for(int i = 0;i < this->num_edges;i++) {
+			printf("edge %d: %f %f\n", i, this->edges[i]->endpoints[Edge::START]->posn[0], this->edges[i]->endpoints[Edge::START]->posn[1]);
+			printf("edge %d: %f %f\n", i, this->edges[i]->endpoints[Edge::END]->posn[0], this->edges[i]->endpoints[Edge::END]->posn[1]);
+		}
+
+		printf("num cells : %d\n", this->num_cells);
+	}
+	
+	//test draw a wall in 1x1 room
+
+	Cell *curCell = view_cell;
+	Frustum viewerFrustum;
+	viewerFrustum.viewerPos = {this->viewer_posn[X], this->viewer_posn[Y]};
+	viewerFrustum.focalDistance = focal_dist;
+	viewerFrustum.FOV = this->viewer_fov;
+	viewerFrustum.rotationDeg = this->viewer_dir;
+	//debug
+	ParametricLine pp(viewerFrustum.getLeftRay());
+	ParametricLine pp2(viewerFrustum.getRightRay());
+	fl_line(pp.startPoint.x, pp.startPoint.y, pp.startPoint.x+pp.dx*10, pp.startPoint.y+pp.dy*10);
+	//
+	Point2D P1, P2;
+	if(frame_num % 30 == 0) printf("################################################per 30 frames############################################\n");
+	if(frame_num % 30 == 0) printf("viewer posn: (%f,%f)\n", this->viewer_posn[X], this->viewer_posn[Y]);
+	if(frame_num % 30 == 0) printf("viewer dir: %f\n", this->viewer_dir);
+	for(int i = 0;i < this->num_edges;i++) {
+		Edge* e = this->edges[i];
+		if(!e->opaque) continue; 
+		if(framePeriod(frame_num, 30)) {
+			printf("edgeP1: (%f,%f)\n", e->endpoints[0]->posn[0], e->endpoints[0]->posn[1]);
+			printf("edgeP2: (%f,%f)\n", e->endpoints[1]->posn[0], e->endpoints[1]->posn[1]);
+		}
+		bool clipResult = clipToFrustum(e, viewerFrustum, P1, P2, framePeriod(frame_num, 30));
+		if(frame_num % 30 == 0) printf("index : %d, clipResult: %d\n",i,clipResult);
+			
+		if(clipResult) {
+			if(frame_num % 30 == 0) {
+				printf("clip wall: (%f, %f) (%f, %f)\n", P1.x, P1.y, P2.x, P2.y);
+			}
+			//assume all walls' z coordinate is from -1 to 1, that's why we represent it as an 2d edge
+			//draw polygon of four points (P1.x, P1.y, -1),(P1.x, P1.y, 1),(P2.x, P2.y, -1),(P2.x, P2.y, 1)
+		}
+		if(framePeriod(frame_num, 30))printf("\n\n");
+	}
+	*/
+	
 }
 
 

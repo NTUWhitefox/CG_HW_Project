@@ -1,0 +1,10 @@
+^C:\COMPUTER_GRAPHIC_PROJECT\CG_HW_PROJECT\HW_P2\MAZEVISIBILITYTEMPLATE\MAZEVISIBILITY\CMAKELISTS.TXT
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Computer_Graphic_Project/CG_HW_Project/HW_P2/MazeVisibilityTemplate/MazeVisibility -BC:/Computer_Graphic_Project/CG_HW_Project/HW_P2/MazeVisibilityTemplate/MazeVisibility --check-stamp-file C:/Computer_Graphic_Project/CG_HW_Project/HW_P2/MazeVisibilityTemplate/MazeVisibility/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

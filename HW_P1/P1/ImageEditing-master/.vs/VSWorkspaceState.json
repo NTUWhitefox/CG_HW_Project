@@ -9,8 +9,14 @@
     "",
     "\\Debug",
     "\\Images",
+<<<<<<< Updated upstream
     "\\Images\\load",
     "\\x64"
+=======
+    "\\Images\\saved",
+    "\\out",
+    "\\src"
+>>>>>>> Stashed changes
   ],
   "SelectedNode": "\\ImageEditing.sln",
   "PreviewInSolutionExplorer": false

@@ -141,11 +141,16 @@ unsigned char* TargaImage::To_RGB(void)
 //      Save the image to a targa file. Returns 1 on success, 0 on failure.
 //
 ///////////////////////////////////////////////////////////////////////////////
+/*
 bool TargaImage::Save_Image(const char *filename)
 {
     char* CWD;
     CWD = getcwd(NULL, 0);
+<<<<<<< Updated upstream
     static const char* path = "\\..\\Images\\saved\\";
+=======
+    static const char* path = ".\\saved\\";
+>>>>>>> Stashed changes
     char* fullPath = (char*)malloc(strlen(CWD) + strlen(path) + strlen(filename) + 1);
     strcpy(fullPath, CWD);
     strcat(fullPath, path);
@@ -167,6 +172,28 @@ bool TargaImage::Save_Image(const char *filename)
 
     return true;
 }// Save_Image
+*/
+bool TargaImage::Save_Image(const char* filename)
+{
+    static const char* path = ".\\saved\\";
+    char* fullPath = (char*)malloc(strlen(path) + strlen(filename) + 1);
+    strcpy(fullPath, path);
+    strcat(fullPath, filename);
+    //cout << fullPath << endl;
+    TargaImage* out_image = Reverse_Rows();
+
+    if (!out_image)
+        return false;
+    if (!tga_write_raw(fullPath, width, height, out_image->data, TGA_TRUECOLOR_32))
+    {
+        cout << "TGA Save Error: %s\n", tga_error_string(tga_get_last_error());
+        return false;
+    }
+    free(fullPath);
+    delete out_image;
+
+    return true;
+}// Save_Image
 ///////////////////////////////////////////////////////////////////////////////
 //
 //      Load a targa image from a file.  Return a new TargaImage object which 
@@ -174,7 +201,7 @@ bool TargaImage::Save_Image(const char *filename)
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-
+/*
 TargaImage* TargaImage::Load_Image(char *filename)
 {
 
@@ -214,7 +241,42 @@ TargaImage* TargaImage::Load_Image(char *filename)
     free(CWD);
     return result;
 }// Load_Image
+*/
+TargaImage* TargaImage::Load_Image(char* filename)
+{
 
+    unsigned char* temp_data;
+    TargaImage* temp_image;
+    TargaImage* result;
+    int		        width, height;
+
+    static const char* path = ".\\load\\";
+    if (!filename)
+    {
+        cout << "No filename given." << endl;
+        return NULL;
+    }// if
+
+    char* fullPath = (char*)malloc(strlen(path) + strlen(filename) + 1);
+    strcpy(fullPath, path);
+    strcat(fullPath, filename);
+
+    //printf("file name %s\n", fullPath);
+
+    temp_data = (unsigned char*)tga_load(fullPath, &width, &height, TGA_TRUECOLOR_32);
+    if (!temp_data)
+    {
+        cout << "TGA Error : %s\n" << tga_error_string(tga_get_last_error()) << endl;
+        width = height = 0;
+        return NULL;
+    }
+    temp_image = new TargaImage(width, height, temp_data);
+    free(temp_data);
+    result = temp_image->Reverse_Rows();
+    delete temp_image;
+    free(fullPath);
+    return result;
+}// Load_Image
 
 void Debugging(char* filename, int line, string messenge) {
     cout << "debugging from " << line << " line of " << filename << " messenge : " << messenge << endl;

@@ -1,4 +1,4 @@
-# Install script for directory: C:/CG2024fall/CG_HW_Project/HW_P2/MazeVisibilityTemplate/MazeVisibility
+# Install script for directory: C:/Computer_Graphic_Project/CG_HW_Project/HW_P2/MazeVisibilityTemplate/MazeVisibility
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -40,5 +40,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "C:/CG2024fall/CG_HW_Project/HW_P2/MazeVisibilityTemplate/MazeVisibility/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "C:/Computer_Graphic_Project/CG_HW_Project/HW_P2/MazeVisibilityTemplate/MazeVisibility/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
