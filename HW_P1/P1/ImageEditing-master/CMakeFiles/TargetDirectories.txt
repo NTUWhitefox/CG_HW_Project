@@ -1,4 +1,0 @@
-C:/CG2024fall/CG_HW_Project/HW_P1/P1/ImageEditing-master/CMakeFiles/ImageEditing.dir
-C:/CG2024fall/CG_HW_Project/HW_P1/P1/ImageEditing-master/CMakeFiles/libtarga.dir
-C:/CG2024fall/CG_HW_Project/HW_P1/P1/ImageEditing-master/CMakeFiles/ALL_BUILD.dir
-C:/CG2024fall/CG_HW_Project/HW_P1/P1/ImageEditing-master/CMakeFiles/ZERO_CHECK.dir

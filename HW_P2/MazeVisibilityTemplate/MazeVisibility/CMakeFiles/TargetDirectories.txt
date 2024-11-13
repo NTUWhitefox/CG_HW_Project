@@ -1,4 +1,0 @@
-C:/Computer_Graphic_Project/CG_HW_Project/HW_P2/MazeVisibilityTemplate/MazeVisibility/CMakeFiles/MazeVisibility.dir
-C:/Computer_Graphic_Project/CG_HW_Project/HW_P2/MazeVisibilityTemplate/MazeVisibility/CMakeFiles/MazeLib.dir
-C:/Computer_Graphic_Project/CG_HW_Project/HW_P2/MazeVisibilityTemplate/MazeVisibility/CMakeFiles/ALL_BUILD.dir
-C:/Computer_Graphic_Project/CG_HW_Project/HW_P2/MazeVisibilityTemplate/MazeVisibility/CMakeFiles/ZERO_CHECK.dir
