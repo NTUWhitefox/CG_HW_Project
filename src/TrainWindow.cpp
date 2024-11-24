@@ -110,7 +110,7 @@ TrainWindow(const int x, const int y)
 		splineBrowser->add("Linear");
 		splineBrowser->add("Cardinal Cubic");
 		splineBrowser->add("Cubic B-Spline");
-		splineBrowser->select(2);
+		splineBrowser->select(1);
 
 		pty += 110;
 
@@ -141,6 +141,11 @@ TrainWindow(const int x, const int y)
 		rzp->callback((Fl_Callback*)rmzCB,this);
 
 		pty+=30;
+
+		dirlight = new Fl_Button(605,pty,60,20,"dir light");
+		togglify(dirlight, 1);
+		pointlight = new Fl_Button(675,pty,75,20,"point light");
+		togglify(pointlight);
 
 		// TODO: add widgets for all of your fancier features here
 #ifdef EXAMPLE_SOLUTION
@@ -198,9 +203,10 @@ advanceTrain(float dir)
 	//#####################################################################
 	// TODO: make this work for your train
 	//#####################################################################
-	//TrainView->t_time += (dir / m_Track.points.size() / (TrainView->DIVIDE_LINE / 40));
-	//if (TrainView->t_time > 1.0f)
-	//	TrainView->t_time -= 1.0f;
+	trainView->t_time += (dir / m_Track.points.size() / (trainView->DIVIDE_LINE / 4));
+	if (trainView->t_time > 1.0f)
+		trainView->t_time -= 1.0f;
+
 #ifdef EXAMPLE_SOLUTION
 	// note - we give a little bit more example code here than normal,
 	// so you can see how this works
