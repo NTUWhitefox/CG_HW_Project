@@ -92,6 +92,7 @@ class TrainWindow : public Fl_Double_Window {
 
 		Fl_Button*			dirlight;
 		Fl_Button*			pointlight;
+		Fl_Button*			physics;
 
 		// we have other widgets as part of the sample solution
 		// this is not for 559 students to know about

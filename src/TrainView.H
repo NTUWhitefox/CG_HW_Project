@@ -71,6 +71,8 @@ class TrainView : public Fl_Gl_Window
 
 		void drawTrack(TrainView*, bool doingShadows);
 
+		void toArcLength();
+
 		void drawTrain(TrainView*, bool doingShadows);
 
 		// setup the projection - assuming that the projection stack has been
@@ -90,7 +92,10 @@ class TrainView : public Fl_Gl_Window
 		int				DIVIDE_LINE = 100;
 		float			t_time = 0;
 		int				line_type = 1;
-		//Pnt3f			qt;
+		bool			isarclen = false;
+		float			arclength = 0;
+		float			t_arclength = 0;
+		float			physics = 0;
 
 		TrainWindow*	tw;				// The parent of this display window
 		CTrack*			m_pTrack;		// The track of the entire scene

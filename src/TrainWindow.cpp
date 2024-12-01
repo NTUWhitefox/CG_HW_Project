@@ -69,7 +69,7 @@ TrainWindow(const int x, const int y)
 		rb->callback((Fl_Callback*)backCB,this);
 		
 		arcLength = new Fl_Button(730,pty,65,20,"ArcLength");
-		togglify(arcLength,1);
+		togglify(arcLength);
   
 		pty+=25;
 		speed = new Fl_Value_Slider(655,pty,140,20,"speed");
@@ -140,12 +140,17 @@ TrainWindow(const int x, const int y)
 		Fl_Button* rzp = new Fl_Button(700,pty,30,20,"R-Z");
 		rzp->callback((Fl_Callback*)rmzCB,this);
 
-		pty+=30;
+		pty += 30;
 
-		dirlight = new Fl_Button(605,pty,60,20,"dir light");
-		togglify(dirlight, 1);
-		pointlight = new Fl_Button(675,pty,75,20,"point light");
+		dirlight = new Fl_Button(605,pty,60,20,"Dir Light");
+		togglify(dirlight);
+		pointlight = new Fl_Button(675,pty,75,20,"Point Light");
 		togglify(pointlight);
+
+		pty += 30;
+
+		physics = new Fl_Button(605, pty, 60, 20, "Physics");
+		togglify(physics);
 
 		// TODO: add widgets for all of your fancier features here
 #ifdef EXAMPLE_SOLUTION
@@ -203,9 +208,35 @@ advanceTrain(float dir)
 	//#####################################################################
 	// TODO: make this work for your train
 	//#####################################################################
-	trainView->t_time += (dir / m_Track.points.size() / (trainView->DIVIDE_LINE / 4));
-	if (trainView->t_time > 1.0f)
-		trainView->t_time -= 1.0f;
+	static bool pre_arcLength = arcLength->value();
+
+	if (pre_arcLength != arcLength->value()) {
+		if (arcLength->value()) {
+			trainView->toArcLength();
+			trainView->isarclen = true;
+		}
+		else {
+			trainView->isarclen = false;
+		}
+	}
+
+	if (arcLength->value()) {
+		trainView->t_arclength += dir * speed->value() * 1.0f;
+		if (physics->value()) trainView->t_arclength += trainView->physics;
+		if (trainView->t_arclength > trainView->arclength) {
+			trainView->t_arclength -= trainView->arclength;
+		}
+		else if (trainView->t_arclength < 0) {
+			trainView->t_arclength += trainView->arclength;
+		}
+	}
+	else {
+		trainView->t_time += dir * speed->value() * 0.02f;
+		if (trainView->t_time > m_Track.points.size()) {
+			trainView->t_time -= m_Track.points.size();
+		}
+	}
+	pre_arcLength = arcLength->value();
 
 #ifdef EXAMPLE_SOLUTION
 	// note - we give a little bit more example code here than normal,

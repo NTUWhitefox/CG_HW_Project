@@ -192,10 +192,10 @@ void TrainView::draw()
 		throw std::runtime_error("Could not initialize GLAD!");
 
 	// Set up the view port
-	glViewport(0,0,w(),h());
+	glViewport(0, 0, w(), h());
 
 	// clear the window, be sure to clear the Z-Buffer too
-	glClearColor(0,0,.3f,0);		// background should be blue
+	glClearColor(0, 0, .3f, 0);		// background should be blue
 
 	// we need to clear out the stencil buffer since we'll use
 	// it for shadows
@@ -204,7 +204,7 @@ void TrainView::draw()
 	glEnable(GL_DEPTH);
 
 	// Blayne prefers GL_DIFFUSE
-    glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
+	glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
 
 	// prepare for projection
 	glMatrixMode(GL_PROJECTION);
@@ -226,7 +226,8 @@ void TrainView::draw()
 	if (tw->topCam->value()) {
 		glDisable(GL_LIGHT1);
 		glDisable(GL_LIGHT2);
-	} else {
+	}
+	else {
 		glEnable(GL_LIGHT1);
 		glEnable(GL_LIGHT2);
 	}
@@ -247,7 +248,7 @@ void TrainView::draw()
 		glDisable(GL_LIGHT0);
 	}
 	if (tw->pointlight->value()) {
-		float yellowAmbientDiffuse[] = { 1.0f, 1.0f, 0.0f, 1.0f };
+		float yellowAmbientDiffuse[] = { 1.0f, 1.0f, 0.8f, 1.0f };
 		float position[] = { -2.0f, 2.0f, -5.0f, 1.0f };
 
 		glLightfv(GL_LIGHT1, GL_AMBIENT, yellowAmbientDiffuse);
@@ -263,25 +264,30 @@ void TrainView::draw()
 	// * set the light parameters
 	//
 	//**********************************************************************
-	/*
-	GLfloat lightPosition1[]	= {0,1,1,0}; // {50, 200.0, 50, 1.0};
-	GLfloat lightPosition2[]	= {1, 0, 0, 0};
-	GLfloat lightPosition3[]	= {0, -1, 0, 0};
-	GLfloat yellowLight[]		= {0.5f, 0.5f, .1f, 1.0};
-	GLfloat whiteLight[]			= {1.0f, 1.0f, 1.0f, 1.0};
-	GLfloat blueLight[]			= {.1f,.1f,.3f,1.0};
-	GLfloat grayLight[]			= {.3f, .3f, .3f, 1.0};
 
-	glLightfv(GL_LIGHT0, GL_POSITION, lightPosition1);
-	glLightfv(GL_LIGHT0, GL_DIFFUSE, whiteLight);
-	glLightfv(GL_LIGHT0, GL_AMBIENT, grayLight);
+	if (!tw->dirlight->value() && !tw->pointlight->value()) {
+		GLfloat lightPosition1[] = { 0,1,1,0 }; // {50, 200.0, 50, 1.0};
+		GLfloat lightPosition2[] = { 1, 0, 0, 0 };
+		GLfloat lightPosition3[] = { 0, -1, 0, 0 };
+		GLfloat yellowLight[] = { 0.5f, 0.5f, .1f, 1.0 };
+		GLfloat whiteLight[] = { 1.0f, 1.0f, 1.0f, 1.0 };
+		GLfloat blueLight[] = { .1f,.1f,.3f,1.0 };
+		GLfloat grayLight[] = { .3f, .3f, .3f, 1.0 };
 
-	glLightfv(GL_LIGHT1, GL_POSITION, lightPosition2);
-	glLightfv(GL_LIGHT1, GL_DIFFUSE, yellowLight);
+		glEnable(GL_LIGHT0);
+		glEnable(GL_LIGHT1);
 
-	glLightfv(GL_LIGHT2, GL_POSITION, lightPosition3);
-	glLightfv(GL_LIGHT2, GL_DIFFUSE, blueLight);
-	*/
+		glLightfv(GL_LIGHT0, GL_POSITION, lightPosition1);
+		glLightfv(GL_LIGHT0, GL_DIFFUSE, whiteLight);
+		glLightfv(GL_LIGHT0, GL_AMBIENT, grayLight);
+
+		glLightfv(GL_LIGHT1, GL_POSITION, lightPosition2);
+		glLightfv(GL_LIGHT1, GL_DIFFUSE, yellowLight);
+		glLightfv(GL_LIGHT1, GL_AMBIENT, grayLight);
+
+		glLightfv(GL_LIGHT2, GL_POSITION, lightPosition3);
+		glLightfv(GL_LIGHT2, GL_DIFFUSE, blueLight);
+	}
 
 
 	//*********************************************************************
@@ -354,7 +360,33 @@ setProjection()
 	// put code for train view projection here!	
 	//####################################################################
 	else if (tw->trainCam->value()) {
-		
+		float percent = 1.0f / DIVIDE_LINE;
+		int i = floor(t_time);
+		float t = t_time - i;
+		Pnt3f qt = drawCurve(m_pTrack->points[(m_pTrack->points.size() + i - 1) % m_pTrack->points.size()].pos, m_pTrack->points[i].pos,
+			m_pTrack->points[(i + 1) % m_pTrack->points.size()].pos, m_pTrack->points[(i + 2) % m_pTrack->points.size()].pos, t, line_type);
+		Pnt3f qt1 = drawCurve(m_pTrack->points[(m_pTrack->points.size() + i - 1) % m_pTrack->points.size()].pos, m_pTrack->points[i].pos,
+			m_pTrack->points[(i + 1) % m_pTrack->points.size()].pos, m_pTrack->points[(i + 2) % m_pTrack->points.size()].pos, t + percent, line_type);
+		Pnt3f orient_t = drawCurve(m_pTrack->points[(m_pTrack->points.size() + i - 1) % m_pTrack->points.size()].orient, m_pTrack->points[i].orient,
+			m_pTrack->points[(i + 1) % m_pTrack->points.size()].orient, m_pTrack->points[(i + 2) % m_pTrack->points.size()].orient, t, line_type);
+
+		Pnt3f forward = qt1 + (qt * (-1));
+		forward.normalize();
+		Pnt3f cross_t = forward * orient_t;
+		cross_t.normalize();
+		Pnt3f up = -1 * forward * cross_t;
+		up.normalize();
+		forward = forward * 4.5f;
+		up = up * 5.0f;
+		Pnt3f pos = qt + up;
+
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		gluPerspective(60, aspect, 0.01, 200);
+		glMatrixMode(GL_MODELVIEW);
+		glLoadIdentity();
+		gluLookAt(pos.x, pos.y, pos.z, pos.x + forward.x, pos.y + forward.y, pos.z + forward.z, up.x, up.y, up.z);
+
 #ifdef EXAMPLE_SOLUTION
 		trainCamView(this,aspect);
 #endif
@@ -444,6 +476,9 @@ Pnt3f TrainView::drawCurve(Pnt3f p0, Pnt3f p1, Pnt3f p2, Pnt3f p3, float t, int 
 void TrainView::drawTrack(TrainView*, bool doingShadows)
 {
 	float percent = 1.0f / DIVIDE_LINE;
+	bool calctrainpos = false;
+	int sleepercount = 0;
+	arclength = 0.0f;
 
 	// Variables with m meaning previous state, which are used to fill the gap
 	Pnt3f qt1m = drawCurve(m_pTrack->points[m_pTrack->points.size() - 2].pos, m_pTrack->points[m_pTrack->points.size() - 1].pos, m_pTrack->points[0].pos, m_pTrack->points[1].pos, 1 - percent, line_type);
@@ -477,10 +512,14 @@ void TrainView::drawTrack(TrainView*, bool doingShadows)
 			// cross
 			Pnt3f orient_t = drawCurve(cp_orient_p0, cp_orient_p1, cp_orient_p2, cp_orient_p3, t, line_type);
 			orient_t.normalize();
-			Pnt3f cross_t = (qt1 + qt0 * (-1)) * orient_t;
-
+			Pnt3f forward = (qt1 + qt0 * (-1));
+			arclength += sqrt(forward.x * forward.x + forward.y * forward.y + forward.z * forward.z);
+			forward.normalize();
+			forward = forward * 2.0f;
+			Pnt3f cross_t = forward * orient_t;
 			cross_t.normalize();
 			cross_t = cross_t * 2.5f;
+
 			glLineWidth(3);
 			glBegin(GL_LINES);
 			if (!doingShadows)
@@ -496,14 +535,33 @@ void TrainView::drawTrack(TrainView*, bool doingShadows)
 			glVertex3f(qt0.x - cross_t.x, qt0.y - cross_t.y, qt0.z - cross_t.z);
 			glEnd();
 			// Draw sleeper
-			if (j % 20 == 0) {
-				if (!doingShadows) glColor3ub(125, 80, 0);
-				glBegin(GL_QUADS);
-				glVertex3f(qt1m.x + 2 * cross_t.x, qt1m.y + 2 * cross_t.y, qt1m.z + 2 * cross_t.z);
-				glVertex3f(qt1m.x - 2 * cross_t.x, qt1m.y - 2 * cross_t.y, qt1m.z - 2 * cross_t.z);
-				glVertex3f(qt1.x - 2 * cross_t.x, qt1.y - 2 * cross_t.y, qt1.z - 2 * cross_t.z);
-				glVertex3f(qt1.x + 2 * cross_t.x, qt1.y + 2 * cross_t.y, qt1.z + 2 * cross_t.z);
-				glEnd();
+			if (tw->arcLength->value()) {
+				if (arclength > sleepercount * 8.0f) {
+					if (!doingShadows) glColor3ub(125, 80, 0);
+					glBegin(GL_QUADS);
+					glVertex3f(qt1.x + 2 * cross_t.x, qt1.y + 2 * cross_t.y, qt1.z + 2 * cross_t.z);
+					glVertex3f(qt1.x - 2 * cross_t.x, qt1.y - 2 * cross_t.y, qt1.z - 2 * cross_t.z);
+					glVertex3f(qt1.x - 2 * cross_t.x + forward.x, qt1.y - 2 * cross_t.y + forward.y, qt1.z - 2 * cross_t.z + forward.z);
+					glVertex3f(qt1.x + 2 * cross_t.x + forward.x, qt1.y + 2 * cross_t.y + forward.y, qt1.z + 2 * cross_t.z + forward.z);
+					glEnd();
+					sleepercount++;
+				}
+			}
+			else {
+				if (j % 10 == 2) {
+					if (!doingShadows) glColor3ub(125, 80, 0);
+					glBegin(GL_QUADS);
+					glVertex3f(qt1.x + 2 * cross_t.x, qt1.y + 2 * cross_t.y, qt1.z + 2 * cross_t.z);
+					glVertex3f(qt1.x - 2 * cross_t.x, qt1.y - 2 * cross_t.y, qt1.z - 2 * cross_t.z);
+					glVertex3f(qt1.x - 2 * cross_t.x + forward.x, qt1.y - 2 * cross_t.y + forward.y, qt1.z - 2 * cross_t.z + forward.z);
+					glVertex3f(qt1.x + 2 * cross_t.x + forward.x, qt1.y + 2 * cross_t.y + forward.y, qt1.z + 2 * cross_t.z + forward.z);
+					glEnd();
+				}
+			}
+			if (!calctrainpos && arclength > t_arclength && isarclen) {
+				calctrainpos = true;
+				t_time = i + t;
+				physics = (qt0.y - qt1.y) * 2.0f;
 			}
 			cross_tm = cross_t;
 			qt1m = qt0;
@@ -511,88 +569,118 @@ void TrainView::drawTrack(TrainView*, bool doingShadows)
 	}
 }
 
+void TrainView::toArcLength() {
+	int point_size = m_pTrack->points.size();
+	float percent = 1.0f / DIVIDE_LINE;
+	int time_i = floor(t_time);
+	float time_t = t_time - time_i;
+	t_arclength = 0.0f;
+	Pnt3f qt0 = drawCurve(m_pTrack->points.back().pos, m_pTrack->points.front().pos, m_pTrack->points[1].pos, m_pTrack->points[2].pos, 0.0f, line_type);
+	for (int i = 0; i <= time_i; i++) {
+		ControlPoint& p0 = m_pTrack->points[(point_size + i - 1) % point_size];
+		ControlPoint& p1 = m_pTrack->points[i];
+		ControlPoint& p2 = m_pTrack->points[(i + 1) % point_size];
+		ControlPoint& p3 = m_pTrack->points[(i + 2) % point_size];
+		float t = 0;
+		float t_DIVIDE_LINE = i != time_i ? DIVIDE_LINE : time_t * DIVIDE_LINE;
+		for (int j = 0; j < t_DIVIDE_LINE; j++) {
+			Pnt3f qt1 = drawCurve(p0.pos, p1.pos, p2.pos, p3.pos, t, line_type);
+			Pnt3f forward = (qt1 + qt0 * (-1));
+			t_arclength += sqrt(forward.x * forward.x + forward.y * forward.y + forward.z * forward.z);
+			qt0 = qt1;
+			t += percent;
+		}
+	}
+}
+
 void TrainView::drawTrain(TrainView*, bool doingShadows)
 {
-	int p = floor(t_time * m_pTrack->points.size());
-	float t = t_time * m_pTrack->points.size() - floor(t_time * m_pTrack->points.size());
-	Pnt3f qt = drawCurve(m_pTrack->points[(m_pTrack->points.size() + p - 1) % m_pTrack->points.size()].pos, m_pTrack->points[p].pos, 
-		m_pTrack->points[(p + 1) % m_pTrack->points.size()].pos, m_pTrack->points[(p + 2) % m_pTrack->points.size()].pos, t, line_type);
-	Pnt3f qt1 = drawCurve(m_pTrack->points[(m_pTrack->points.size() + p - 1) % m_pTrack->points.size()].pos, m_pTrack->points[p].pos,
-		m_pTrack->points[(p + 1) % m_pTrack->points.size()].pos, m_pTrack->points[(p + 2) % m_pTrack->points.size()].pos, t + (1 / DIVIDE_LINE), line_type);
+	float percent = 1.0f / DIVIDE_LINE;
+	int i = floor(t_time);
+	float t = t_time - i;
+	Pnt3f qt = drawCurve(m_pTrack->points[(m_pTrack->points.size() + i - 1) % m_pTrack->points.size()].pos, m_pTrack->points[i].pos, 
+		m_pTrack->points[(i + 1) % m_pTrack->points.size()].pos, m_pTrack->points[(i + 2) % m_pTrack->points.size()].pos, t, line_type);
+	Pnt3f qt1 = drawCurve(m_pTrack->points[(m_pTrack->points.size() + i - 1) % m_pTrack->points.size()].pos, m_pTrack->points[i].pos,
+		m_pTrack->points[(i + 1) % m_pTrack->points.size()].pos, m_pTrack->points[(i + 2) % m_pTrack->points.size()].pos, t + percent, line_type);
+	Pnt3f orient_t = drawCurve(m_pTrack->points[(m_pTrack->points.size() + i - 1) % m_pTrack->points.size()].orient, m_pTrack->points[i].orient,
+		m_pTrack->points[(i + 1) % m_pTrack->points.size()].orient, m_pTrack->points[(i + 2) % m_pTrack->points.size()].orient, t, line_type);
 
-	Pnt3f orient_t = drawCurve(m_pTrack->points[(m_pTrack->points.size() + p - 1) % m_pTrack->points.size()].orient, m_pTrack->points[p].orient,
-		m_pTrack->points[(p + 1) % m_pTrack->points.size()].orient, m_pTrack->points[(p + 2) % m_pTrack->points.size()].orient, t, line_type);
-	orient_t.normalize();
-	Pnt3f cross_t = (qt1 + qt * (-1)) * orient_t;
+	Pnt3f forward = qt1 + (qt * (-1));
+	forward.normalize();
+	Pnt3f cross_t = forward * orient_t;
 	cross_t.normalize();
-	cross_t = cross_t * 5.0f;
+	Pnt3f up = -1 * forward * cross_t;
+	up.normalize();
+	forward = forward * 4.5f;
+	cross_t = cross_t * 4.0f;
+	up = up * 8.0f;
 
 	if (!doingShadows) glColor3ub(255, 128, 128);
-	// xy plane back
+	// back
 	glBegin(GL_QUADS);
 	glTexCoord2f(0.0f, 0.0f);
-	glVertex3f(qt.x - 5, qt.y, qt.z - 5);
+	glVertex3f(qt.x - forward.x - cross_t.x, qt.y - forward.y - cross_t.y, qt.z - forward.z - cross_t.z);
 	glTexCoord2f(1.0f, 0.0f);
-	glVertex3f(qt.x + 5, qt.y, qt.z - 5);
+	glVertex3f(qt.x - forward.x + cross_t.x, qt.y - forward.y + cross_t.y, qt.z - forward.z + cross_t.z);
 	glTexCoord2f(1.0f, 1.0f);
-	glVertex3f(qt.x + 5, qt.y + 10, qt.z - 5);
+	glVertex3f(qt.x - forward.x + cross_t.x + up.x, qt.y - forward.y + cross_t.y + up.y, qt.z - forward.z + cross_t.z + up.z);
 	glTexCoord2f(0.0f, 1.0f);
-	glVertex3f(qt.x - 5, qt.y + 10, qt.z - 5);
+	glVertex3f(qt.x - forward.x - cross_t.x + up.x, qt.y - forward.y - cross_t.y + up.y, qt.z - forward.z - cross_t.z + up.z);
 	glEnd();
-	// xy plane front
+	// front
 	glBegin(GL_QUADS);
 	glTexCoord2f(0.0f, 0.0f);
-	glVertex3f(qt.x - 5, qt.y, qt.z + 5);
+	glVertex3f(qt.x + forward.x - cross_t.x, qt.y + forward.y - cross_t.y, qt.z + forward.z - cross_t.z);
 	glTexCoord2f(1.0f, 0.0f);
-	glVertex3f(qt.x + 5, qt.y, qt.z + 5);
+	glVertex3f(qt.x + forward.x + cross_t.x, qt.y + forward.y + cross_t.y, qt.z + forward.z + cross_t.z);
 	glTexCoord2f(1.0f, 1.0f);
-	glVertex3f(qt.x + 5, qt.y + 10, qt.z + 5);
+	glVertex3f(qt.x + forward.x + cross_t.x + up.x, qt.y + forward.y + cross_t.y + up.y, qt.z + forward.z + cross_t.z + up.z);
 	glTexCoord2f(0.0f, 1.0f);
-	glVertex3f(qt.x - 5, qt.y + 10, qt.z + 5);
+	glVertex3f(qt.x + forward.x - cross_t.x + up.x, qt.y + forward.y - cross_t.y + up.y, qt.z + forward.z - cross_t.z + up.z);
 	glEnd();
-	// xz plane left
+	// left
 	glBegin(GL_QUADS);
 	glTexCoord2f(0.0f, 0.0f);
-	glVertex3f(qt.x - 5, qt.y, qt.z - 5);
+	glVertex3f(qt.x - forward.x - cross_t.x, qt.y - forward.y - cross_t.y, qt.z - forward.z - cross_t.z);
 	glTexCoord2f(1.0f, 0.0f);
-	glVertex3f(qt.x + 5, qt.y, qt.z - 5);
+	glVertex3f(qt.x - forward.x - cross_t.x + up.x, qt.y - forward.y - cross_t.y + up.y, qt.z - forward.z - cross_t.z + up.z);
 	glTexCoord2f(1.0f, 1.0f);
-	glVertex3f(qt.x + 5, qt.y, qt.z + 5);
+	glVertex3f(qt.x + forward.x - cross_t.x + up.x, qt.y + forward.y - cross_t.y + up.y, qt.z + forward.z - cross_t.z + up.z);
 	glTexCoord2f(0.0f, 1.0f);
-	glVertex3f(qt.x - 5, qt.y, qt.z + 5);
+	glVertex3f(qt.x + forward.x - cross_t.x, qt.y + forward.y - cross_t.y, qt.z + forward.z - cross_t.z);
 	glEnd();
-	// xz plane right
+	// right
 	glBegin(GL_QUADS);
 	glTexCoord2f(0.0f, 0.0f);
-	glVertex3f(qt.x - 5, qt.y + 10, qt.z - 5);
+	glVertex3f(qt.x - forward.x + cross_t.x, qt.y - forward.y + cross_t.y, qt.z - forward.z + cross_t.z);
 	glTexCoord2f(1.0f, 0.0f);
-	glVertex3f(qt.x + 5, qt.y + 10, qt.z - 5);
+	glVertex3f(qt.x - forward.x + cross_t.x + up.x, qt.y - forward.y + cross_t.y + up.y, qt.z - forward.z + cross_t.z + up.z);
 	glTexCoord2f(1.0f, 1.0f);
-	glVertex3f(qt.x + 5, qt.y + 10, qt.z + 5);
+	glVertex3f(qt.x + forward.x + cross_t.x + up.x, qt.y + forward.y + cross_t.y + up.y, qt.z + forward.z + cross_t.z + up.z);
 	glTexCoord2f(0.0f, 1.0f);
-	glVertex3f(qt.x - 5, qt.y + 10, qt.z + 5);
+	glVertex3f(qt.x + forward.x + cross_t.x, qt.y + forward.y + cross_t.y, qt.z + forward.z + cross_t.z);
 	glEnd();
-	// yz plane bottom
+	// bottom
 	glBegin(GL_QUADS);
 	glTexCoord2f(0.0f, 0.0f);
-	glVertex3f(qt.x - 5, qt.y, qt.z - 5);
+	glVertex3f(qt.x - forward.x - cross_t.x, qt.y - forward.y - cross_t.y, qt.z - forward.z - cross_t.z);
 	glTexCoord2f(1.0f, 0.0f);
-	glVertex3f(qt.x - 5, qt.y, qt.z + 5);
+	glVertex3f(qt.x + forward.x - cross_t.x, qt.y + forward.y - cross_t.y, qt.z + forward.z - cross_t.z);
 	glTexCoord2f(1.0f, 1.0f);
-	glVertex3f(qt.x - 5, qt.y + 10, qt.z + 5);
+	glVertex3f(qt.x + forward.x + cross_t.x, qt.y + forward.y + cross_t.y, qt.z + forward.z + cross_t.z);
 	glTexCoord2f(0.0f, 1.0f);
-	glVertex3f(qt.x - 5, qt.y + 10, qt.z - 5);
+	glVertex3f(qt.x - forward.x + cross_t.x, qt.y - forward.y + cross_t.y, qt.z - forward.z + cross_t.z);
 	glEnd();
-	// yz plane up
+	// top
 	glBegin(GL_QUADS);
 	glTexCoord2f(0.0f, 0.0f);
-	glVertex3f(qt.x + 5, qt.y, qt.z - 5);
+	glVertex3f(qt.x - forward.x - cross_t.x + up.x, qt.y - forward.y - cross_t.y + up.y, qt.z - forward.z - cross_t.z + up.z);
 	glTexCoord2f(1.0f, 0.0f);
-	glVertex3f(qt.x + 5, qt.y, qt.z + 5);
+	glVertex3f(qt.x + forward.x - cross_t.x + up.x, qt.y + forward.y - cross_t.y + up.y, qt.z + forward.z - cross_t.z + up.z);
 	glTexCoord2f(1.0f, 1.0f);
-	glVertex3f(qt.x + 5, qt.y + 10, qt.z + 5);
+	glVertex3f(qt.x + forward.x + cross_t.x + up.x, qt.y + forward.y + cross_t.y + up.y, qt.z + forward.z + cross_t.z + up.z);
 	glTexCoord2f(0.0f, 1.0f);
-	glVertex3f(qt.x + 5, qt.y + 10, qt.z - 5);
+	glVertex3f(qt.x - forward.x + cross_t.x + up.x, qt.y - forward.y + cross_t.y + up.y, qt.z - forward.z + cross_t.z + up.z);
 	glEnd();
 }
 
