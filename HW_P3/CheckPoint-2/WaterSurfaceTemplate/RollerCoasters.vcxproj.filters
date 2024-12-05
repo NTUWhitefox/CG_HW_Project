@@ -1,0 +1,71 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTemplate\src\main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTemplate\src\CallBacks.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTemplate\src\ControlPoint.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTemplate\src\Track.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTemplate\src\TrainView.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTemplate\src\TrainWindow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTemplate\include\glad4.6\src\glad.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTemplate\src\RenderUtilities\BufferObject.h">
+      <Filter>RenderUtilities</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTemplate\src\RenderUtilities\Shader.h">
+      <Filter>RenderUtilities</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTemplate\src\RenderUtilities\Texture.h">
+      <Filter>RenderUtilities</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTemplate\include\stb_image.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTemplate\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTemplate\src\CallBacks.H" />
+    <None Include="C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTemplate\src\ControlPoint.H" />
+    <None Include="C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTemplate\src\Object.H" />
+    <None Include="C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTemplate\src\Track.H" />
+    <None Include="C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTemplate\src\TrainView.H" />
+    <None Include="C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTemplate\src\TrainWindow.H" />
+    <None Include="C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTemplate\assets\shaders\simple.vert">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTemplate\assets\shaders\simple.frag">
+      <Filter>shaders</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{665F5E3D-6C5B-3C0F-A26A-BF0C7710E30A}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="RenderUtilities">
+      <UniqueIdentifier>{6663B937-61E3-39DF-92DB-D80073EAD081}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{A9C5BB1C-5A90-39FC-9A0D-AB5F19C599BC}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shaders">
+      <UniqueIdentifier>{665DE93E-112C-39A6-B207-F7B766F6F14A}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

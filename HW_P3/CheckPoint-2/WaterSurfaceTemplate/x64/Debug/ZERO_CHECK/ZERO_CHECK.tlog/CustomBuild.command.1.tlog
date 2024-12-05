@@ -1,0 +1,10 @@
+^C:\COMPUTER_GRAPHIC_PROJECT\CG_HW_PROJECT\HW_P3\CHECKPOINT-2\WATERSURFACETEMPLATE\CMAKEFILES\1ADD8F0C6834767F6A8E5894AED5D137\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Computer_Graphic_Project/CG_HW_Project/HW_P3/CheckPoint-2/WaterSurfaceTemplate -BC:/Computer_Graphic_Project/CG_HW_Project/HW_P3/CheckPoint-2/WaterSurfaceTemplate --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file C:/Computer_Graphic_Project/CG_HW_Project/HW_P3/CheckPoint-2/WaterSurfaceTemplate/RollerCoasters.sln
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

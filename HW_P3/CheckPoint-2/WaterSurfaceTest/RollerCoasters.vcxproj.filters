@@ -1,0 +1,65 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTest\src\main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTest\src\CallBacks.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTest\src\ControlPoint.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTest\src\Track.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTest\src\TrainView.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTest\src\TrainWindow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTest\include\glad4.6\src\glad.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTest\src\RenderUtilities\BufferObject.h">
+      <Filter>RenderUtilities</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTest\src\RenderUtilities\Shader.h">
+      <Filter>RenderUtilities</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTest\src\RenderUtilities\Texture.h">
+      <Filter>RenderUtilities</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTest\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTest\src\CallBacks.H" />
+    <None Include="C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTest\src\ControlPoint.H" />
+    <None Include="C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTest\src\Object.H" />
+    <None Include="C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTest\src\Track.H" />
+    <None Include="C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTest\src\TrainView.H" />
+    <None Include="C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTest\src\TrainWindow.H" />
+    <None Include="C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTest\assets\shaders\simple.vert">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTest\assets\shaders\simple.frag">
+      <Filter>shaders</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="RenderUtilities">
+      <UniqueIdentifier>{4B149F0B-91AC-32FB-B313-202E3CCFCB27}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{78E8C174-897A-3551-9129-A40B62D27CA2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shaders">
+      <UniqueIdentifier>{B970F2CC-9EEE-331D-9658-6CB9D2C30A6E}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

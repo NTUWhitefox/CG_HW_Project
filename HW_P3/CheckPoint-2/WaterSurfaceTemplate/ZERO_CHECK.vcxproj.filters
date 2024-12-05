@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTemplate\CMakeFiles\1add8f0c6834767f6a8e5894aed5d137\generate.stamp.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{686B08B0-F2DC-3F45-8BAB-7B84C469DFE2}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

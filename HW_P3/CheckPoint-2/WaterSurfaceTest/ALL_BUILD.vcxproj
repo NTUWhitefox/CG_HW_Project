@@ -1,0 +1,188 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ResolveNugetPackages>false</ResolveNugetPackages>
+  </PropertyGroup>
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="MinSizeRel|x64">
+      <Configuration>MinSizeRel</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="RelWithDebInfo|x64">
+      <Configuration>RelWithDebInfo</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{5D9DDD12-7E0D-3716-890B-BC6271C929AC}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <WindowsTargetPlatformVersion>10.0.22621.0</WindowsTargetPlatformVersion>
+    <Platform>x64</Platform>
+    <ProjectName>ALL_BUILD</ProjectName>
+    <VCProjectUpgraderObjectName>NoUpgrade</VCProjectUpgraderObjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Utility</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Utility</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'" Label="Configuration">
+    <ConfigurationType>Utility</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'" Label="Configuration">
+    <ConfigurationType>Utility</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.20506.1</_ProjectFileVersion>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Midl>
+      <AdditionalIncludeDirectories>C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTest\include;C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTest\include\glad4.6\include;C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTest\include\glm-0.9.8.5\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Midl>
+      <AdditionalIncludeDirectories>C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTest\include;C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTest\include\glad4.6\include;C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTest\include\glm-0.9.8.5\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">
+    <Midl>
+      <AdditionalIncludeDirectories>C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTest\include;C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTest\include\glad4.6\include;C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTest\include\glm-0.9.8.5\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">
+    <Midl>
+      <AdditionalIncludeDirectories>C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTest\include;C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTest\include\glad4.6\include;C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTest\include\glm-0.9.8.5\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTest\CMakeLists.txt">
+      <UseUtf8Encoding>Always</UseUtf8Encoding>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building Custom Rule C:/Computer_Graphic_Project/CG_HW_Project/HW_P3/CheckPoint-2/WaterSurfaceTest/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Computer_Graphic_Project/CG_HW_Project/HW_P3/CheckPoint-2/WaterSurfaceTest -BC:/Computer_Graphic_Project/CG_HW_Project/HW_P3/CheckPoint-2/WaterSurfaceTest --check-stamp-file C:/Computer_Graphic_Project/CG_HW_Project/HW_P3/CheckPoint-2/WaterSurfaceTest/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTest\CMakeFiles\3.29.3\CMakeCCompiler.cmake;C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTest\CMakeFiles\3.29.3\CMakeCXXCompiler.cmake;C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTest\CMakeFiles\3.29.3\CMakeRCCompiler.cmake;C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTest\CMakeFiles\3.29.3\CMakeSystem.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeCInformation.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Compiler\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Compiler\MSVC.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Platform\Windows-Initialize.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Platform\WindowsPaths.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTest\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building Custom Rule C:/Computer_Graphic_Project/CG_HW_Project/HW_P3/CheckPoint-2/WaterSurfaceTest/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Computer_Graphic_Project/CG_HW_Project/HW_P3/CheckPoint-2/WaterSurfaceTest -BC:/Computer_Graphic_Project/CG_HW_Project/HW_P3/CheckPoint-2/WaterSurfaceTest --check-stamp-file C:/Computer_Graphic_Project/CG_HW_Project/HW_P3/CheckPoint-2/WaterSurfaceTest/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTest\CMakeFiles\3.29.3\CMakeCCompiler.cmake;C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTest\CMakeFiles\3.29.3\CMakeCXXCompiler.cmake;C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTest\CMakeFiles\3.29.3\CMakeRCCompiler.cmake;C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTest\CMakeFiles\3.29.3\CMakeSystem.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeCInformation.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Compiler\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Compiler\MSVC.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Platform\Windows-Initialize.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Platform\WindowsPaths.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTest\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Building Custom Rule C:/Computer_Graphic_Project/CG_HW_Project/HW_P3/CheckPoint-2/WaterSurfaceTest/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Computer_Graphic_Project/CG_HW_Project/HW_P3/CheckPoint-2/WaterSurfaceTest -BC:/Computer_Graphic_Project/CG_HW_Project/HW_P3/CheckPoint-2/WaterSurfaceTest --check-stamp-file C:/Computer_Graphic_Project/CG_HW_Project/HW_P3/CheckPoint-2/WaterSurfaceTest/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTest\CMakeFiles\3.29.3\CMakeCCompiler.cmake;C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTest\CMakeFiles\3.29.3\CMakeCXXCompiler.cmake;C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTest\CMakeFiles\3.29.3\CMakeRCCompiler.cmake;C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTest\CMakeFiles\3.29.3\CMakeSystem.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeCInformation.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Compiler\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Compiler\MSVC.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Platform\Windows-Initialize.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Platform\WindowsPaths.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTest\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Building Custom Rule C:/Computer_Graphic_Project/CG_HW_Project/HW_P3/CheckPoint-2/WaterSurfaceTest/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Computer_Graphic_Project/CG_HW_Project/HW_P3/CheckPoint-2/WaterSurfaceTest -BC:/Computer_Graphic_Project/CG_HW_Project/HW_P3/CheckPoint-2/WaterSurfaceTest --check-stamp-file C:/Computer_Graphic_Project/CG_HW_Project/HW_P3/CheckPoint-2/WaterSurfaceTest/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTest\CMakeFiles\3.29.3\CMakeCCompiler.cmake;C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTest\CMakeFiles\3.29.3\CMakeCXXCompiler.cmake;C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTest\CMakeFiles\3.29.3\CMakeRCCompiler.cmake;C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTest\CMakeFiles\3.29.3\CMakeSystem.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeCInformation.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Compiler\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Compiler\MSVC.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Platform\Windows-Initialize.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Platform\WindowsPaths.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTest\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTest\ZERO_CHECK.vcxproj">
+      <Project>{E80674D8-7CB0-3049-91F6-294A50E8F0CD}</Project>
+      <Name>ZERO_CHECK</Name>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </ProjectReference>
+    <ProjectReference Include="C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTest\RollerCoasters.vcxproj">
+      <Project>{2348A927-6532-31C0-8365-BA175B3A438A}</Project>
+      <Name>RollerCoasters</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTest\Utilities.vcxproj">
+      <Project>{E5156305-6FA9-36CA-9008-BE2C09B5F6E5}</Project>
+      <Name>Utilities</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
