@@ -75,6 +75,8 @@ class TrainView : public Fl_Gl_Window
 
 		void drawTrain(TrainView*, bool doingShadows);
 
+		void drawWheel(Pnt3f qt, Pnt3f forward, Pnt3f cross, Pnt3f up, float r, float w);
+
 		// setup the projection - assuming that the projection stack has been
 		// cleared for you
 		void setProjection();
@@ -92,9 +94,12 @@ class TrainView : public Fl_Gl_Window
 		int				DIVIDE_LINE = 100;
 		float			t_time = 0;
 		int				line_type = 1;
-		bool			isarclen = false;
+		bool			isarclen = true;
 		float			arclength = 0;
 		float			t_arclength = 0;
+		int				smoke_life[50] = { 0 };
+		Pnt3f			smoke_pos[50];
+		int				smoke_size[50] = { 0 };
 		float			physics = 0;
 
 		TrainWindow*	tw;				// The parent of this display window

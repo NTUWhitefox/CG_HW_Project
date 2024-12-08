@@ -69,7 +69,7 @@ TrainWindow(const int x, const int y)
 		rb->callback((Fl_Callback*)backCB,this);
 		
 		arcLength = new Fl_Button(730,pty,65,20,"ArcLength");
-		togglify(arcLength);
+		togglify(arcLength, 1);
   
 		pty+=25;
 		speed = new Fl_Value_Slider(655,pty,140,20,"speed");
@@ -149,8 +149,17 @@ TrainWindow(const int x, const int y)
 
 		pty += 30;
 
-		physics = new Fl_Button(605, pty, 60, 20, "Physics");
+		physics = new Fl_Button(605,pty,60,20,"Physics");
 		togglify(physics);
+
+		pty += 30;
+
+		support = new Fl_Button(605,pty,60,20,"Support");
+		togglify(support);
+		headlight = new Fl_Button(670,pty,70,20,"Headlight");
+		togglify(headlight);
+		smoke = new Fl_Button(745,pty,50,20,"Smoke");
+		togglify(smoke);
 
 		// TODO: add widgets for all of your fancier features here
 #ifdef EXAMPLE_SOLUTION
