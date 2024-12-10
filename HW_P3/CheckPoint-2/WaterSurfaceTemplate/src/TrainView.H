@@ -29,7 +29,8 @@
 #include "RenderUtilities/BufferObject.h"
 #include "RenderUtilities/Shader.h"
 #include "RenderUtilities/Texture.h"
-
+#include <vector>
+#include <tuple>
 // Preclarify for preventing the compiler error
 class TrainWindow;
 class CTrack;
@@ -58,6 +59,17 @@ class CTrack;
 
 // this uses the old ArcBall Code
 #include "Utilities/ArcBallCam.H"
+using std::vector;
+using std::tuple;
+class Model;
+
+struct Drop {
+	Drop(glm::vec2 p, float t, float r, float k) :point(p), time(t), radius(r), keep_time(k) {}
+	glm::vec2 point;
+	float time;
+	float radius;
+	float keep_time;
+};
 
 class TrainView : public Fl_Gl_Window
 {
@@ -104,7 +116,7 @@ class TrainView : public Fl_Gl_Window
 		GLuint skyboxVAO, skyboxVBO;
 		GLuint tilesVAO, tilesVBO;
 
-		//Model* wave = nullptr;
+		Model* wave = nullptr;
 		Texture2D* height_map_image = nullptr;
 		int height_index = 0;
 
@@ -120,6 +132,19 @@ class TrainView : public Fl_Gl_Window
 		ALCcontext* context = nullptr;
 		ALuint source;
 		ALuint buffer;
+		
+		unsigned int screen_framebuffer;
+		unsigned int screen_textureColorbuffer;
+		unsigned int screen_rbo;
+		unsigned int screen_quadVAO, screen_quadVBO;
 
-
+		unsigned int interactive_framebuffer;
+		unsigned int interactive_textureColorbuffer;
+		unsigned int interactive_rbo;
+		unsigned int interactive_quadVAO, interactive_quadVBO;
+		unsigned int scaleValue = 25;
+		unsigned int tiles_tex = -1;
+		//vector<glm::vec2> drop_point;
+		//vector<float> drop_time;
+		vector<Drop> all_drop;
 };

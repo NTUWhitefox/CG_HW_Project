@@ -69,7 +69,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Midl>
-      <AdditionalIncludeDirectories>C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTemplate\include;C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTemplate\include\glad4.6\include;C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTemplate\include\glm-0.9.8.5\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTemplate\include;C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTemplate\include\glad4.6\include;C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTemplate\include\glm-0.9.8.5\glm;C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTemplate\include\assimp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -79,7 +79,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Midl>
-      <AdditionalIncludeDirectories>C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTemplate\include;C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTemplate\include\glad4.6\include;C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTemplate\include\glm-0.9.8.5\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTemplate\include;C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTemplate\include\glad4.6\include;C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTemplate\include\glm-0.9.8.5\glm;C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTemplate\include\assimp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -89,7 +89,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">
     <Midl>
-      <AdditionalIncludeDirectories>C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTemplate\include;C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTemplate\include\glad4.6\include;C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTemplate\include\glm-0.9.8.5\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTemplate\include;C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTemplate\include\glad4.6\include;C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTemplate\include\glm-0.9.8.5\glm;C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTemplate\include\assimp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -99,7 +99,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">
     <Midl>
-      <AdditionalIncludeDirectories>C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTemplate\include;C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTemplate\include\glad4.6\include;C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTemplate\include\glm-0.9.8.5\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTemplate\include;C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTemplate\include\glad4.6\include;C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTemplate\include\glm-0.9.8.5\glm;C:\Computer_Graphic_Project\CG_HW_Project\HW_P3\CheckPoint-2\WaterSurfaceTemplate\include\assimp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>

@@ -17,6 +17,7 @@ set(SRC_RENDER_UTILITIES
 include_directories(${INCLUDE_DIR})
 include_directories(${INCLUDE_DIR}glad4.6/include/)
 include_directories(${INCLUDE_DIR}glm-0.9.8.5/glm/)
+include_directories(${INCLUDE_DIR}assimp/)
 
 add_Definitions("-D_XKEYCHECK_H")
 add_definitions(-DPROJECT_DIR="${PROJECT_SOURCE_DIR}")
@@ -71,7 +72,8 @@ target_link_libraries(RollerCoasters
     ${LIB_DIR}ex-common.lib
     ${LIB_DIR}OpenAL32.lib
     ${LIB_DIR}alut.lib
-    ${LIB_DIR}alut_static.lib)
+    ${LIB_DIR}alut_static.lib
+    ${LIB_DIR}assimp-vc142-mt.lib)
 
 target_link_libraries(RollerCoasters Utilities)
 
@@ -81,6 +83,7 @@ set(DLL_SOURCE_PATHS
     ${LIB_DIR}dll/opencv_world341d.dll
     ${LIB_DIR}dll/alut.dll
     ${LIB_DIR}dll/OpenAL32.dll
+    ${LIB_DIR}dll/assimp-vc142-mt.dll
 )
 # 每次編譯完成後，把dll複製到執行檔所在資料夾(debug/release)
 foreach(DLL_PATH ${DLL_SOURCE_PATHS})

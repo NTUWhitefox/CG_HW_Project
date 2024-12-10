@@ -169,7 +169,11 @@ TrainWindow(const int x, const int y)
 
 		pty+=30;
 
-
+		ratio_of_reflect_refract = new Fl_Value_Slider(700, pty, 100, 20, "reflect/refract");
+		ratio_of_reflect_refract->range(0, 1);
+		ratio_of_reflect_refract->value(0.5);
+		ratio_of_reflect_refract->align(FL_ALIGN_LEFT);
+		ratio_of_reflect_refract->type(FL_HORIZONTAL);
 		// TODO: add widgets for all of your fancier features here
 #ifdef EXAMPLE_SOLUTION
 		makeExampleWidgets(this,pty);

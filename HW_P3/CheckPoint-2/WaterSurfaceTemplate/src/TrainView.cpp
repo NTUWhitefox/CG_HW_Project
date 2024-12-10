@@ -39,10 +39,11 @@
 #include "TrainView.H"
 #include "TrainWindow.H"
 #include "Utilities/3DUtils.H"
+#include <random>
 
 #define STB_IMAGE_STATIC
 #define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
+#include "model.h"
 
 
 
@@ -229,26 +230,26 @@ void TrainView::draw()
 		if (!this->sinwave) {
 			this->sinwave = new
 				Shader(
-					"./src/shaders/sinwave.vert",
+					"./assets/shaders/sinwave.vert",
 					nullptr, nullptr, nullptr,
-					"./src/shaders/sinwave.frag");
+					"./assets/shaders/sinwave.frag");
 		}
 
 		if (!this->height_map) {
 			this->height_map = new
 				Shader(
-					"./src/shaders/height_map.vert",
+					"./assets/shaders/height_map.vert",
 					nullptr, nullptr, nullptr,
-					"./src/shaders/height_map.frag");
+					"./assets/shaders/height_map.frag");
 		}
 
 
 		if (!this->skybox) {
 			this->skybox = new
 				Shader(
-					"./srcs/shaders/skybox.vert",
+					"./assets/shaders/skybox.vert",
 					nullptr, nullptr, nullptr,
-					"./src/shaders/skybox.frag");
+					"./assets/shaders/skybox.frag");
 			float skyboxVertices[] = {
 				// positions          
 				-1.0f,  1.0f, -1.0f,
@@ -302,12 +303,12 @@ void TrainView::draw()
 			glEnableVertexAttribArray(0);
 			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 			vector<const GLchar*> faces = {
-			"Images/skybox/right.jpg",
-			"Images/skybox/left.jpg",
-			"Images/skybox/top.jpg",
-			"Images/skybox/bottom.jpg",
-			"Images/skybox/front.jpg",
-			"Images/skybox/back.jpg",
+			"./assets/images/right.jpg",
+			"./assets/images/left.jpg",
+			"./assets/images/top.jpg",
+			"./assets/images/bottom.jpg",
+			"./assets/images/front.jpg",
+			"./assets/images/back.jpg",
 			};
 			cubemapTexture = loadCubemap(faces);
 		}
@@ -315,9 +316,9 @@ void TrainView::draw()
 		if (!this->tiles) {
 			this->tiles = new
 				Shader(
-					"./src/shaders/tiles.vert",
+					"./assets/shaders/tiles.vert",
 					nullptr, nullptr, nullptr,
-					"./src/shaders/tiles.frag");
+					"./assets/shaders/tiles.frag");
 			float tilesVertices[] = {
 				// positions          
 				-1.0f,  1.0f, -1.0f,
@@ -371,12 +372,12 @@ void TrainView::draw()
 			glEnableVertexAttribArray(0);
 			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 			vector<const GLchar*> faces = {
-			"Images/tiles.jpg",
-			"Images/tiles.jpg",
-			"Images/tiles.jpg",
-			"Images/tiles.jpg",
-			"Images/tiles.jpg",
-			"Images/tiles.jpg",
+			"./assets/images/tiles.jpg",
+			"./assets/images/tiles.jpg",
+			"./assets/images/tiles.jpg",
+			"./assets/images/tiles.jpg",
+			"./assets/images/tiles.jpg",
+			"./assets/images/tiles.jpg",
 			};
 			tiles_cubemapTexture = loadCubemap(faces);
 
@@ -390,12 +391,12 @@ void TrainView::draw()
 		//glBufferData(GL_UNIFORM_BUFFER, this->commom_matrices->size, NULL, GL_STATIC_DRAW);
 		//glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-		/*
+		
 		if (!wave) {
 			//wave = new Model("backpack/backpack.obj");
 			//wave = new Model("water/cube.obj");
 			//wave = new Model("water/water.obj");
-			wave = new Model("water/water_bunny.obj");
+			wave = new Model("assets/water/water_bunny.obj");
 			//wave = new Model("water/plane.obj");
 
 			for (int i = 0; i < 200; i++) {
@@ -406,11 +407,60 @@ void TrainView::draw()
 				else if (num.size() == 2) {
 					num = "0" + num;
 				}
-				wave->add_height_map_texture((num + ".png").c_str(), "Images/height map");
+				wave->add_height_map_texture((num + ".png").c_str(), "assets/height_map");
 				//wave->add_height_map_texture((num + ".png").c_str(), "Images/height map2");
 			}
 		}
-		*/
+		if (!this->screen) {
+			this->screen = new
+				Shader(
+					"./assets/shaders/screen.vert",
+					nullptr, nullptr, nullptr,
+					"./assets/shaders/screen.frag");
+
+			float quadVertices[] = { // vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
+				// positions   // texCoords
+				-1.0f,  1.0f,  0.0f, 1.0f,
+				-1.0f, -1.0f,  0.0f, 0.0f,
+				 1.0f, -1.0f,  1.0f, 0.0f,
+
+				-1.0f,  1.0f,  0.0f, 1.0f,
+				 1.0f, -1.0f,  1.0f, 0.0f,
+				 1.0f,  1.0f,  1.0f, 1.0f
+			};
+			// screen quad VAO
+			glGenVertexArrays(1, &screen_quadVAO);
+			glGenBuffers(1, &screen_quadVBO);
+			glBindVertexArray(screen_quadVAO);
+			glBindBuffer(GL_ARRAY_BUFFER, screen_quadVBO);
+			glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+			glEnableVertexAttribArray(0);
+			glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+			glEnableVertexAttribArray(1);
+			glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+
+			screen->Use();
+			glUniform1i(glGetUniformLocation(screen->Program, "screenTexture"), 0);
+
+			glGenFramebuffers(1, &screen_framebuffer);
+			glBindFramebuffer(GL_FRAMEBUFFER, screen_framebuffer);
+
+			glGenTextures(1, &screen_textureColorbuffer);
+			glBindTexture(GL_TEXTURE_2D, screen_textureColorbuffer);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w(), h(), 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, screen_textureColorbuffer, 0);
+
+			glGenRenderbuffers(1, &screen_rbo);
+			glBindRenderbuffer(GL_RENDERBUFFER, screen_rbo);
+			glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, w(), h()); // use a single renderbuffer object for both a depth AND stencil buffer.
+			glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, screen_rbo); // now actually attach it
+			// now that we actually created the framebuffer and added all attachments we want to check if it is actually complete now
+			if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+				cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << endl;
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		}
 		/*
 		section end
 		*/
@@ -601,7 +651,7 @@ void TrainView::draw()
 	GLfloat blueLight[]			= {.1f,.1f,.3f,1.0};
 	GLfloat grayLight[]			= {.3f, .3f, .3f, 1.0};
 
-	glLightfv(GL_LIGHT0, GL_POSITION, lightPosition1);
+	/*glLightfv(GL_LIGHT0, GL_POSITION, lightPosition1);
 	glLightfv(GL_LIGHT0, GL_DIFFUSE, whiteLight);
 	glLightfv(GL_LIGHT0, GL_AMBIENT, grayLight);
 
@@ -609,7 +659,7 @@ void TrainView::draw()
 	glLightfv(GL_LIGHT1, GL_DIFFUSE, yellowLight);
 
 	glLightfv(GL_LIGHT2, GL_POSITION, lightPosition3);
-	glLightfv(GL_LIGHT2, GL_DIFFUSE, blueLight);
+	glLightfv(GL_LIGHT2, GL_DIFFUSE, blueLight);*/
 
 	// set linstener position 
 	if(selectedCube >= 0)
@@ -632,7 +682,7 @@ void TrainView::draw()
 
 	setupFloor();
 	glDisable(GL_LIGHTING);
-	drawFloor(200,10);
+	//drawFloor(200,10); 
 
 
 	//*********************************************************************
@@ -651,35 +701,147 @@ void TrainView::draw()
 		unsetupShadows();
 	}
 
-	setUBO();
-	glBindBufferRange(
-		GL_UNIFORM_BUFFER, /*binding point*/0, this->commom_matrices->ubo, 0, this->commom_matrices->size);
+	Shader* choose_wave;
+	if (tw->waveBrowser->value() == 1) {
+		choose_wave = sinwave;
+	}
+	else if (tw->waveBrowser->value() == 2) {
+		choose_wave = height_map;
+	}
+	else {
+		choose_wave = height_map;
+	}
+	choose_wave->Use();
 
-	//bind shader
-	this->shader->Use();
+	//glUniform1i(glGetUniformLocation(choose_wave->Program, "toon_open"), tw->toon->value());
+	//setUBO();
+	//glBindBufferRange(
+		//GL_UNIFORM_BUFFER, /*binding point*/0, this->commom_matrices->ubo, 0, this->commom_matrices->size);
 
-	glm::mat4 model_matrix = glm::mat4();
-	model_matrix = glm::translate(model_matrix, this->source_pos);
-	model_matrix = glm::scale(model_matrix, glm::vec3(10.0f, 10.0f, 10.0f));
-	glUniformMatrix4fv(
-		glGetUniformLocation(this->shader->Program, "u_model"), 1, GL_FALSE, &model_matrix[0][0]);
-	glUniform3fv(
-		glGetUniformLocation(this->shader->Program, "u_color"), 
-		1, 
-		&glm::vec3(0.0f, 1.0f, 0.0f)[0]);
-	this->texture->bind(0);
-	glUniform1i(glGetUniformLocation(this->shader->Program, "u_texture"), 0);
-	
-	//bind VAO
-	glBindVertexArray(this->plane->vao);
+	wave->height_map_index = tw->height_map_index;//int <- float
 
-	glDrawElements(GL_TRIANGLES, this->plane->element_amount, GL_UNSIGNED_INT, 0);
+	GLfloat projection[16];
+	GLfloat view[16];
+	glGetFloatv(GL_PROJECTION_MATRIX, projection);
+	glGetFloatv(GL_MODELVIEW_MATRIX, view);
+	glm::mat4 view_without_translate = glm::mat4(glm::mat3(glm::make_mat4(view)));
+	glm::mat4 view_inv = glm::inverse(glm::make_mat4(view));
+	glm::vec3 my_pos(view_inv[3][0], view_inv[3][1], view_inv[3][2]);
+	//cout << my_pos[0] << ' ' << my_pos[1] << ' ' << my_pos[2] << endl;
 
-	//unbind VAO
+	glm::mat4 model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(0, 0, 0));
+	model = glm::scale(model, glm::vec3(scaleValue, scaleValue, scaleValue));
+
+	glUniform1f(glGetUniformLocation(choose_wave->Program, "amplitude"),0.15f);
+	glUniform1f(glGetUniformLocation(choose_wave->Program, "interactive_amplitude"), 0.15f);
+	glUniform1f(glGetUniformLocation(choose_wave->Program, "wavelength"), 1);
+	glUniform1f(glGetUniformLocation(choose_wave->Program, "interactive_wavelength"), 1.0f);
+	glUniform1f(glGetUniformLocation(choose_wave->Program, "time"), tw->time);
+	glUniform1f(glGetUniformLocation(choose_wave->Program, "speed"), 1.0f);
+	glUniform1f(glGetUniformLocation(choose_wave->Program, "interactive_speed"),1.0f);
+
+
+	//glUniform1f(glGetUniformLocation(choose_wave->Program, "Eta"), tw->Eta->value());
+	glUniform1f(glGetUniformLocation(choose_wave->Program, "ratio_of_reflect_refract"), tw->ratio_of_reflect_refract->value());
+
+	GLfloat translation_and_scale[16];
+	glGetFloatv(GL_MODELVIEW_MATRIX, translation_and_scale);
+
+	glUniform3f(glGetUniformLocation(choose_wave->Program, "viewPos"), my_pos[0], my_pos[1], my_pos[2]);
+	glUniformMatrix4fv(glGetUniformLocation(choose_wave->Program, "projection"), 1, GL_FALSE, projection);
+	glUniformMatrix4fv(glGetUniformLocation(choose_wave->Program, "view"), 1, GL_FALSE, view);
+	glUniformMatrix4fv(glGetUniformLocation(choose_wave->Program, "model"), 1, GL_FALSE, &model[0][0]);
+	glUniform1f(glGetUniformLocation(choose_wave->Program, "material.diffuse"), 0.0f);
+	glUniform1f(glGetUniformLocation(choose_wave->Program, "material.specular"), 1.0f);
+	glUniform1f(glGetUniformLocation(choose_wave->Program, "material.shininess"), 16.0f);
+
+	//glUniform1f(glGetUniformLocation(choose_wave->Program, "dir_open"), tw->dir_L->value());
+	//glUniform1f(glGetUniformLocation(choose_wave->Program, "point_open"), tw->point_L->value());
+	//glUniform1f(glGetUniformLocation(choose_wave->Program, "spot_open"), tw->spot_L->value());
+	//glUniform1f(glGetUniformLocation(choose_wave->Program, "reflect_open"), tw->reflect->value());
+	//glUniform1f(glGetUniformLocation(choose_wave->Program, "refract_open"), tw->refract->value());
+	//	glUniform1f(glGetUniformLocation(choose_wave->Program, "flat_shading"), tw->height_map_flat->value());
+
+	glUniform1f(glGetUniformLocation(choose_wave->Program, "skybox"), cubemapTexture);
+
+
+	//dir_light(choose_wave);
+	//point_light(choose_wave);
+	//spot_light(choose_wave, glm::normalize(glm::vec3(0, 0, 0) - my_pos));
+
+	glUniform2f(glGetUniformLocation(choose_wave->Program, "drop_point"), -1, -1);
+
+
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, tiles_tex);
+	glUniform1i(glGetUniformLocation(choose_wave->Program, "tiles"), 2);
+	wave->Draw(*choose_wave, tw->waveBrowser->value());
+
+
+	for (int i = 0; i < all_drop.size(); i++) {
+		if (tw->time - all_drop[i].time > all_drop[i].keep_time) {
+			all_drop.erase(all_drop.begin() + i);
+			i--;
+			continue;
+		}
+		glUniform2f(glGetUniformLocation(choose_wave->Program, "drop_point"), all_drop[i].point.x, all_drop[i].point.y);
+		glUniform1f(glGetUniformLocation(choose_wave->Program, "drop_time"), all_drop[i].time);
+		glUniform1f(glGetUniformLocation(choose_wave->Program, "interactive_radius"), all_drop[i].radius);
+		wave->Draw(*choose_wave, tw->waveBrowser->value());
+	}
+
+	glEnable(GL_CULL_FACE);
+	glm::mat4 tiles_model = glm::scale(glm::mat4(1.0f), glm::vec3(scaleValue, scaleValue, scaleValue));
+
+	tiles->Use();
+	glUniform1f(glGetUniformLocation(tiles->Program, "tiles"), tiles_cubemapTexture);
+	glUniformMatrix4fv(glGetUniformLocation(tiles->Program, "projection"), 1, GL_FALSE, projection);
+	glUniformMatrix4fv(glGetUniformLocation(tiles->Program, "view"), 1, GL_FALSE, view);
+	glUniformMatrix4fv(glGetUniformLocation(tiles->Program, "model"), 1, GL_FALSE, &tiles_model[0][0]);
+	// skybox cube
+	glBindVertexArray(tilesVAO);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, tiles_cubemapTexture);
+
+	glDrawArrays(GL_TRIANGLES, 0, 36);
 	glBindVertexArray(0);
+	glDepthFunc(GL_LESS); // set depth function back to default
+	glDisable(GL_CULL_FACE);
 
+	glDepthFunc(GL_LEQUAL);
+	skybox->Use();
+	glUniform1f(glGetUniformLocation(skybox->Program, "skybox"), cubemapTexture);
+	glUniformMatrix4fv(glGetUniformLocation(skybox->Program, "projection"), 1, GL_FALSE, projection);
+	glUniformMatrix4fv(glGetUniformLocation(skybox->Program, "model_view"), 1, GL_FALSE, &view_without_translate[0][0]);
+	// skybox cube
+	glBindVertexArray(skyboxVAO);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+	glBindVertexArray(0);
+	glDepthFunc(GL_LESS); // set depth function back to default
+
+
+
+
+	// now bind back to default framebuffer and draw a quad plane with the attached framebuffer color texture
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
+	// clear all relevant buffers
+	glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // set clear color to white (not really necessary actually, since we won't be able to see behind the quad anyways)
+	glClear(GL_COLOR_BUFFER_BIT);
+	this->screen->Use();
+	glUniform1i(glGetUniformLocation(screen->Program, "frame_buffer_type"), 1);
+	glUniform1f(glGetUniformLocation(screen->Program, "screen_w"), w());
+	glUniform1f(glGetUniformLocation(screen->Program, "screen_h"), h());
+	glUniform1f(glGetUniformLocation(screen->Program, "t"), tw->time * 20);
+	glBindVertexArray(screen_quadVAO);
+	glBindTexture(GL_TEXTURE_2D, screen_textureColorbuffer);	// use the color attachment texture as the texture of the quad plane
+	glDrawArrays(GL_TRIANGLES, 0, 6);
 	//unbind shader(switch to fixed pipeline)
 	glUseProgram(0);
+
 }
 
 //************************************************************************
