@@ -263,7 +263,7 @@ void keeping_water(TrainWindow* tw)
 		}
 	}
 
-	if (1 && tw->time - tw->last_rain_time > (1.0f / 10)) {
+	if (0 && tw->time - tw->last_rain_time > (1.0f / 10)) {
 		tw->trainView->all_drop.push_back(Drop(glm::vec2((float)rand() / RAND_MAX, (float)rand() / RAND_MAX), tw->time, 10.0f, 2.0f));
 		tw->last_rain_time = tw->time;
 	}

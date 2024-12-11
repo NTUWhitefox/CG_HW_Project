@@ -95,7 +95,7 @@ class TrainView : public Fl_Gl_Window
 
 		// pick a point (for when the mouse goes down)
 		void doPick();
-
+		
 		//set ubo
 		void setUBO();
 	public:
@@ -146,5 +146,6 @@ class TrainView : public Fl_Gl_Window
 		unsigned int tiles_tex = -1;
 		//vector<glm::vec2> drop_point;
 		//vector<float> drop_time;
+		void add_drop(float radius, float keep_time);
 		vector<Drop> all_drop;
 };

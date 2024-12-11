@@ -108,6 +108,7 @@ int TrainView::handle(int event)
 			// if the left button be pushed is left mouse button
 			if (last_push == FL_LEFT_MOUSE  ) {
 				doPick();
+				add_drop(8.0f, 1.0f);
 				damage(1);
 				return 1;
 			};
@@ -583,53 +584,56 @@ void TrainView::draw()
 			this->texture = new Texture2D(PROJECT_DIR "/assets/images/church.png");
 
 		// Disabled play sound
-		if (false && !this->device){
-			//Tutorial: https://ffainelli.github.io/openal-example/
-			this->device = alcOpenDevice(NULL);
-			if (!this->device)
-				puts("ERROR::NO_AUDIO_DEVICE");
+		if (!interactive_frame) {
+			this->interactive_frame = new
+				Shader(
+					"./Codes/shaders/interactive_frame.vert",
+					nullptr, nullptr, nullptr,
+					"./Codes/shaders/interactive_frame.frag");
 
-			ALboolean enumeration = alcIsExtensionPresent(NULL, "ALC_ENUMERATION_EXT");
-			if (enumeration == AL_FALSE)
-				puts("Enumeration not supported");
-			else
-				puts("Enumeration supported");
+			float quadVertices[] = { // vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
+				// positions   // texCoords
+				-1.0f,  1.0f,  0.0f, 1.0f,
+				-1.0f, -1.0f,  0.0f, 0.0f,
+				 1.0f, -1.0f,  1.0f, 0.0f,
 
-			this->context = alcCreateContext(this->device, NULL);
-			if (!alcMakeContextCurrent(context))
-				puts("Failed to make context current");
+				-1.0f,  1.0f,  0.0f, 1.0f,
+				 1.0f, -1.0f,  1.0f, 0.0f,
+				 1.0f,  1.0f,  1.0f, 1.0f
+			};
+			// screen quad VAO
+			glGenVertexArrays(1, &interactive_quadVAO);
+			glGenBuffers(1, &interactive_quadVBO);
+			glBindVertexArray(interactive_quadVAO);
+			glBindBuffer(GL_ARRAY_BUFFER, interactive_quadVBO);
+			glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+			glEnableVertexAttribArray(0);
+			glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+			glEnableVertexAttribArray(1);
+			glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+			// framebuffer configuration
+			glGenFramebuffers(1, &interactive_framebuffer);
+			glBindFramebuffer(GL_FRAMEBUFFER, interactive_framebuffer);
 
-			this->source_pos = glm::vec3(0.0f, 5.0f, 0.0f);
+			glGenTextures(1, &interactive_textureColorbuffer);
+			glBindTexture(GL_TEXTURE_2D, interactive_textureColorbuffer);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w(), h(), 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, interactive_textureColorbuffer, 0);
 
-			ALfloat listenerOri[] = { 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f };
-			alListener3f(AL_POSITION, source_pos.x, source_pos.y, source_pos.z);
-			alListener3f(AL_VELOCITY, 0, 0, 0);
-			alListenerfv(AL_ORIENTATION, listenerOri);
-
-			alGenSources((ALuint)1, &this->source);
-			alSourcef(this->source, AL_PITCH, 1);
-			alSourcef(this->source, AL_GAIN, 1.0f);
-			alSource3f(this->source, AL_POSITION, source_pos.x, source_pos.y, source_pos.z);
-			alSource3f(this->source, AL_VELOCITY, 0, 0, 0);
-			alSourcei(this->source, AL_LOOPING, AL_TRUE);
-
-			alGenBuffers((ALuint)1, &this->buffer);
-
-			ALsizei size, freq;
-			ALenum format;
-			ALvoid* data;
-			ALboolean loop = AL_TRUE;
-
-			//Material from: ThinMatrix
-			alutLoadWAVFile((ALbyte*)PROJECT_DIR "/Audios/bounce.wav", &format, &data, &size, &freq, &loop);
-			alBufferData(this->buffer, format, data, size, freq);
-			alSourcei(this->source, AL_BUFFER, this->buffer);
-
-			if (format == AL_FORMAT_STEREO16 || format == AL_FORMAT_STEREO8)
-				puts("TYPE::STEREO");
-			else if (format == AL_FORMAT_MONO16 || format == AL_FORMAT_MONO8)
-				puts("TYPE::MONO");
-			alSourcePlay(this->source);
+			glGenRenderbuffers(1, &interactive_rbo);
+			glBindRenderbuffer(GL_RENDERBUFFER, interactive_rbo);
+			glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, w(), h()); // use a single renderbuffer object for both a depth AND stencil buffer.
+			glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, interactive_rbo); // now actually attach it
+			// now that we actually created the framebuffer and added all attachments we want to check if it is actually complete now
+			if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+				cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << endl;
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		}
+		if (tiles_tex == -1) {
+			tiles_tex = TextureFromFile("assets/images/tiles.jpg", ".");
+			//tiles_tex = TextureFromFile("Images/church.png",".");
 		}
 	}
 	else
@@ -688,20 +692,7 @@ void TrainView::draw()
 	GLfloat blueLight[]			= {.1f,.1f,.3f,1.0};
 	GLfloat grayLight[]			= {.3f, .3f, .3f, 1.0};
 
-	// set linstener position 
-	if(selectedCube >= 0)
-		alListener3f(AL_POSITION, 
-			m_pTrack->points[selectedCube].pos.x,
-			m_pTrack->points[selectedCube].pos.y,
-			m_pTrack->points[selectedCube].pos.z);
-	else
-		alListener3f(AL_POSITION, 
-			this->source_pos.x, 
-			this->source_pos.y,
-			this->source_pos.z);
-
-
-	//*********************************************************************
+	//********************************************************************* 
 	// now draw the ground plane
 	//*********************************************************************
 	// set to opengl fixed pipeline(use opengl 1.x draw function)
@@ -854,18 +845,18 @@ void TrainView::draw()
 
 	// now bind back to default framebuffer and draw a quad plane with the attached framebuffer color texture
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
+	//glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
 	// clear all relevant buffers
 	//glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // set clear color to white (not really necessary actually, since we won't be able to see behind the quad anyways)
 	//glClear(GL_COLOR_BUFFER_BIT);
-	this->screen->Use();
-	//glUniform1i(glGetUniformLocation(screen->Program, "frame_buffer_type"), 1);
+	//this->screen->Use();
+	glUniform1i(glGetUniformLocation(screen->Program, "frame_buffer_type"), 1);
 	glUniform1f(glGetUniformLocation(screen->Program, "screen_w"), w());
 	glUniform1f(glGetUniformLocation(screen->Program, "screen_h"), h());
 	glUniform1f(glGetUniformLocation(screen->Program, "t"), tw->time * 20);
-	//glBindVertexArray(screen_quadVAO);
-	//glBindTexture(GL_TEXTURE_2D, screen_textureColorbuffer);	// use the color attachment texture as the texture of the quad plane
-	glDrawArrays(GL_TRIANGLES, 0, 6);
+	glBindVertexArray(screen_quadVAO);
+	glBindTexture(GL_TEXTURE_2D, screen_textureColorbuffer);	// use the color attachment texture as the texture of the quad plane
+	//glDrawArrays(GL_TRIANGLES, 0, 6);
 	//unbind shader(switch to fixed pipeline)
 	glUseProgram(0);
 
@@ -918,7 +909,47 @@ setProjection()
 #endif
 	}
 }
+void TrainView::add_drop(float radius, float keep_time) {
+	glBindFramebuffer(GL_FRAMEBUFFER, interactive_framebuffer);
+	glEnable(GL_DEPTH_TEST); // enable depth testing (is disabled for rendering screen-space quad)
+	// make sure we clear the framebuffer's content
+	glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT);
 
+	interactive_frame->Use();
+
+	GLfloat View[16];
+	GLfloat Projection[16];
+
+	glGetFloatv(GL_PROJECTION_MATRIX, Projection);
+	glGetFloatv(GL_MODELVIEW_MATRIX, View);
+
+	//transformation matrix
+	glm::mat4 model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(0, 0, 0));
+	model = glm::scale(model, glm::vec3(scaleValue, scaleValue, scaleValue));
+
+	glUniformMatrix4fv(glGetUniformLocation(interactive_frame->Program, "projection"), 1, GL_FALSE, Projection);
+	glUniformMatrix4fv(glGetUniformLocation(interactive_frame->Program, "view"), 1, GL_FALSE, View);
+	glUniformMatrix4fv(glGetUniformLocation(interactive_frame->Program, "model"), 1, GL_FALSE, &model[0][0]);
+	wave->Draw(*interactive_frame, tw->waveBrowser->value());
+
+	glReadBuffer(GL_COLOR_ATTACHMENT0);
+	glm::vec3 uv;
+	glReadPixels(Fl::event_x(), h() - Fl::event_y(), 1, 1, GL_RGB, GL_FLOAT, &uv[0]);
+
+	glReadBuffer(GL_NONE);
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+
+	if (uv.b != 1.0) {
+		cout << "drop : " << uv.x << ' ' << uv.y << endl;
+
+		all_drop.push_back(Drop(glm::vec2(uv.x, uv.y), tw->time, radius, keep_time));
+	}
+	else {
+		//drop_point.x = -1.0f;
+	}
+}
 //************************************************************************
 //
 // * this draws all of the stuff in the world
