@@ -248,3 +248,23 @@ void rmzCB(Fl_Widget*, TrainWindow* tw)
 	rollz(tw, -1);
 }
 
+void keeping_water(TrainWindow* tw)
+{
+	if (clock() - lastRedraw > CLOCKS_PER_SEC / 30 && tw->animating) {
+		lastRedraw = clock();
+		tw->time += 0.01f;
+		tw->height_map_index += 10;
+		tw->damageMe();
+		if (std::numeric_limits<float>::max() - tw->time <= 0.01f) {
+			tw->time = 0.0f;
+		}
+		if (tw->height_map_index >= 200.0f) {
+			tw->height_map_index = 0.0f;
+		}
+	}
+
+	if (1 && tw->time - tw->last_rain_time > (1.0f / 10)) {
+		tw->trainView->all_drop.push_back(Drop(glm::vec2((float)rand() / RAND_MAX, (float)rand() / RAND_MAX), tw->time, 10.0f, 2.0f));
+		tw->last_rain_time = tw->time;
+	}
+}

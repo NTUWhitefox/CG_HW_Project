@@ -36,14 +36,12 @@
 #include "CallBacks.H"
 
 
-
+;
 //************************************************************************
 //
 // * Constructor
 //========================================================================
-TrainWindow::
-TrainWindow(const int x, const int y) 
-	: Fl_Double_Window(x,y,800,600,"Train and Roller Coaster")
+TrainWindow::TrainWindow(const int x, const int y):Fl_Double_Window(x, y, 800, 600, "Train and Roller Coaster")
 //========================================================================
 {
 	// make all of the widgets
@@ -186,9 +184,10 @@ TrainWindow(const int x, const int y)
 		widgets->end();
 	}
 	end();	// done adding to this widget
-
+	animating = true;
 	// set up callback on idle
-	Fl::add_idle((void (*)(void*))runButtonCB,this);
+	//Fl::add_idle((void (*)(void*))runButtonCB,this);
+	Fl::add_idle((void (*)(void*))keeping_water, this);
 }
 
 //************************************************************************

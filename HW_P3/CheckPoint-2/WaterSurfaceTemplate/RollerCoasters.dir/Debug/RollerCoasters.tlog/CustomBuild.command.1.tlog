@@ -1,6 +1,6 @@
-^C:\COMPUTER_GRAPHIC_PROJECT\CG_HW_PROJECT\HW_P3\CHECKPOINT-2\WATERSURFACETEMPLATE\CMAKELISTS.TXT
+^C:\CG2024FALL\CG_HW_PROJECT\HW_P3\CHECKPOINT-2\WATERSURFACETEMPLATE\CMAKELISTS.TXT
 setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -SC:/Computer_Graphic_Project/CG_HW_Project/HW_P3/CheckPoint-2/WaterSurfaceTemplate -BC:/Computer_Graphic_Project/CG_HW_Project/HW_P3/CheckPoint-2/WaterSurfaceTemplate --check-stamp-file C:/Computer_Graphic_Project/CG_HW_Project/HW_P3/CheckPoint-2/WaterSurfaceTemplate/CMakeFiles/generate.stamp
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/CG2024fall/CG_HW_Project/HW_P3/CheckPoint-2/WaterSurfaceTemplate -BC:/CG2024fall/CG_HW_Project/HW_P3/CheckPoint-2/WaterSurfaceTemplate --check-stamp-file C:/CG2024fall/CG_HW_Project/HW_P3/CheckPoint-2/WaterSurfaceTemplate/CMakeFiles/generate.stamp
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone

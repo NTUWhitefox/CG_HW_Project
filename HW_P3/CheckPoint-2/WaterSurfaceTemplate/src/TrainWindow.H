@@ -34,6 +34,8 @@
 #include <Fl/Fl_Group.H>
 #include <Fl/Fl_Value_Slider.H>
 #include <Fl/Fl_Browser.H>
+#include <Fl/Fl_Text_Buffer.H>
+#include <FL/Fl_Text_Display.H>
 #pragma warning(pop)
 
 // we need to know what is in the world to show
@@ -96,6 +98,8 @@ class TrainWindow : public Fl_Double_Window {
 		Fl_Value_Slider* ratio_of_reflect_refract;
 		float height_map_index = 0;
 		float time = 0.0f;
+		bool animating = false;
+		float last_rain_time = 0.0f;
 		// we have other widgets as part of the sample solution
 		// this is not for 559 students to know about
 #ifdef EXAMPLE_SOLUTION

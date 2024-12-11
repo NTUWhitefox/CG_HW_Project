@@ -470,7 +470,53 @@ void TrainView::draw()
 				PROJECT_DIR "/assets/shaders/simple.vert",
 				nullptr, nullptr, nullptr, 
 				PROJECT_DIR "/assets/shaders/simple.frag");
+		if (!interactive_frame) {
+			this->interactive_frame = new
+				Shader(
+					"./assets/shaders/interactive_frame.vert",
+					nullptr, nullptr, nullptr,
+					"./assets/shaders/interactive_frame.frag");
 
+			float quadVertices[] = { // vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
+				// positions   // texCoords
+				-1.0f,  1.0f,  0.0f, 1.0f,
+				-1.0f, -1.0f,  0.0f, 0.0f,
+				 1.0f, -1.0f,  1.0f, 0.0f,
+
+				-1.0f,  1.0f,  0.0f, 1.0f,
+				 1.0f, -1.0f,  1.0f, 0.0f,
+				 1.0f,  1.0f,  1.0f, 1.0f
+			};
+			// screen quad VAO
+			glGenVertexArrays(1, &interactive_quadVAO);
+			glGenBuffers(1, &interactive_quadVBO);
+			glBindVertexArray(interactive_quadVAO);
+			glBindBuffer(GL_ARRAY_BUFFER, interactive_quadVBO);
+			glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+			glEnableVertexAttribArray(0);
+			glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+			glEnableVertexAttribArray(1);
+			glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+			// framebuffer configuration
+			glGenFramebuffers(1, &interactive_framebuffer);
+			glBindFramebuffer(GL_FRAMEBUFFER, interactive_framebuffer);
+
+			glGenTextures(1, &interactive_textureColorbuffer);
+			glBindTexture(GL_TEXTURE_2D, interactive_textureColorbuffer);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w(), h(), 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, interactive_textureColorbuffer, 0);
+
+			glGenRenderbuffers(1, &interactive_rbo);
+			glBindRenderbuffer(GL_RENDERBUFFER, interactive_rbo);
+			glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, w(), h()); // use a single renderbuffer object for both a depth AND stencil buffer.
+			glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, interactive_rbo); // now actually attach it
+			// now that we actually created the framebuffer and added all attachments we want to check if it is actually complete now
+			if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+				cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << endl;
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		}
 		if (!this->commom_matrices)
 			this->commom_matrices = new UBO();
 			this->commom_matrices->size = 2 * sizeof(glm::mat4);
@@ -583,16 +629,7 @@ void TrainView::draw()
 				puts("TYPE::STEREO");
 			else if (format == AL_FORMAT_MONO16 || format == AL_FORMAT_MONO8)
 				puts("TYPE::MONO");
-
 			alSourcePlay(this->source);
-
-			// cleanup context
-			//alDeleteSources(1, &source);
-			//alDeleteBuffers(1, &buffer);
-			//device = alcGetContextsDevice(context);
-			//alcMakeContextCurrent(NULL);
-			//alcDestroyContext(context);
-			//alcCloseDevice(device);
 		}
 	}
 	else
@@ -651,16 +688,6 @@ void TrainView::draw()
 	GLfloat blueLight[]			= {.1f,.1f,.3f,1.0};
 	GLfloat grayLight[]			= {.3f, .3f, .3f, 1.0};
 
-	/*glLightfv(GL_LIGHT0, GL_POSITION, lightPosition1);
-	glLightfv(GL_LIGHT0, GL_DIFFUSE, whiteLight);
-	glLightfv(GL_LIGHT0, GL_AMBIENT, grayLight);
-
-	glLightfv(GL_LIGHT1, GL_POSITION, lightPosition2);
-	glLightfv(GL_LIGHT1, GL_DIFFUSE, yellowLight);
-
-	glLightfv(GL_LIGHT2, GL_POSITION, lightPosition3);
-	glLightfv(GL_LIGHT2, GL_DIFFUSE, blueLight);*/
-
 	// set linstener position 
 	if(selectedCube >= 0)
 		alListener3f(AL_POSITION, 
@@ -713,7 +740,7 @@ void TrainView::draw()
 	}
 	choose_wave->Use();
 
-	//glUniform1i(glGetUniformLocation(choose_wave->Program, "toon_open"), tw->toon->value());
+	//glUniform1i(glGetUniformLocation(choose_wave->Program, "toon_open"), 1);
 	//setUBO();
 	//glBindBufferRange(
 		//GL_UNIFORM_BUFFER, /*binding point*/0, this->commom_matrices->ubo, 0, this->commom_matrices->size);
@@ -742,7 +769,7 @@ void TrainView::draw()
 	glUniform1f(glGetUniformLocation(choose_wave->Program, "interactive_speed"),1.0f);
 
 
-	//glUniform1f(glGetUniformLocation(choose_wave->Program, "Eta"), tw->Eta->value());
+	glUniform1f(glGetUniformLocation(choose_wave->Program, "Eta"), 1);
 	glUniform1f(glGetUniformLocation(choose_wave->Program, "ratio_of_reflect_refract"), tw->ratio_of_reflect_refract->value());
 
 	GLfloat translation_and_scale[16];
@@ -778,7 +805,7 @@ void TrainView::draw()
 	glUniform1i(glGetUniformLocation(choose_wave->Program, "tiles"), 2);
 	wave->Draw(*choose_wave, tw->waveBrowser->value());
 
-
+	
 	for (int i = 0; i < all_drop.size(); i++) {
 		if (tw->time - all_drop[i].time > all_drop[i].keep_time) {
 			all_drop.erase(all_drop.begin() + i);
@@ -790,7 +817,7 @@ void TrainView::draw()
 		glUniform1f(glGetUniformLocation(choose_wave->Program, "interactive_radius"), all_drop[i].radius);
 		wave->Draw(*choose_wave, tw->waveBrowser->value());
 	}
-
+	
 	glEnable(GL_CULL_FACE);
 	glm::mat4 tiles_model = glm::scale(glm::mat4(1.0f), glm::vec3(scaleValue, scaleValue, scaleValue));
 
@@ -829,15 +856,15 @@ void TrainView::draw()
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
 	// clear all relevant buffers
-	glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // set clear color to white (not really necessary actually, since we won't be able to see behind the quad anyways)
-	glClear(GL_COLOR_BUFFER_BIT);
+	//glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // set clear color to white (not really necessary actually, since we won't be able to see behind the quad anyways)
+	//glClear(GL_COLOR_BUFFER_BIT);
 	this->screen->Use();
-	glUniform1i(glGetUniformLocation(screen->Program, "frame_buffer_type"), 1);
+	//glUniform1i(glGetUniformLocation(screen->Program, "frame_buffer_type"), 1);
 	glUniform1f(glGetUniformLocation(screen->Program, "screen_w"), w());
 	glUniform1f(glGetUniformLocation(screen->Program, "screen_h"), h());
 	glUniform1f(glGetUniformLocation(screen->Program, "t"), tw->time * 20);
-	glBindVertexArray(screen_quadVAO);
-	glBindTexture(GL_TEXTURE_2D, screen_textureColorbuffer);	// use the color attachment texture as the texture of the quad plane
+	//glBindVertexArray(screen_quadVAO);
+	//glBindTexture(GL_TEXTURE_2D, screen_textureColorbuffer);	// use the color attachment texture as the texture of the quad plane
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 	//unbind shader(switch to fixed pipeline)
 	glUseProgram(0);
