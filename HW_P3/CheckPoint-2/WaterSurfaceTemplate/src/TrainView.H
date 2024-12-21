@@ -148,4 +148,7 @@ class TrainView : public Fl_Gl_Window
 		//vector<float> drop_time;
 		void add_drop(float radius, float keep_time);
 		vector<Drop> all_drop;
+
+
+		//aditional 
 };

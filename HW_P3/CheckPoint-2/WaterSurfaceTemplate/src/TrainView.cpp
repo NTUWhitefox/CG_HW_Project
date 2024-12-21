@@ -395,7 +395,7 @@ void TrainView::draw()
 		
 		if (!wave) {
 			//wave = new Model("backpack/backpack.obj");
-			//wave = new Model("water/cube.obj");
+			//wave = new Model("assets/water/cube.obj");
 			//wave = new Model("water/water.obj");
 			wave = new Model("assets/water/water_bunny.obj");
 			//wave = new Model("water/plane.obj");
@@ -794,7 +794,7 @@ void TrainView::draw()
 	glActiveTexture(GL_TEXTURE2);
 	glBindTexture(GL_TEXTURE_2D, tiles_tex);
 	glUniform1i(glGetUniformLocation(choose_wave->Program, "tiles"), 2);
-	wave->Draw(*choose_wave, tw->waveBrowser->value());
+	wave->Draw_wave(*choose_wave, tw->waveBrowser->value());
 
 	
 	for (int i = 0; i < all_drop.size(); i++) {
@@ -806,7 +806,7 @@ void TrainView::draw()
 		glUniform2f(glGetUniformLocation(choose_wave->Program, "drop_point"), all_drop[i].point.x, all_drop[i].point.y);
 		glUniform1f(glGetUniformLocation(choose_wave->Program, "drop_time"), all_drop[i].time);
 		glUniform1f(glGetUniformLocation(choose_wave->Program, "interactive_radius"), all_drop[i].radius);
-		wave->Draw(*choose_wave, tw->waveBrowser->value());
+		wave->Draw_wave(*choose_wave, tw->waveBrowser->value());
 	}
 	
 	glEnable(GL_CULL_FACE);
@@ -817,7 +817,7 @@ void TrainView::draw()
 	glUniformMatrix4fv(glGetUniformLocation(tiles->Program, "projection"), 1, GL_FALSE, projection);
 	glUniformMatrix4fv(glGetUniformLocation(tiles->Program, "view"), 1, GL_FALSE, view);
 	glUniformMatrix4fv(glGetUniformLocation(tiles->Program, "model"), 1, GL_FALSE, &tiles_model[0][0]);
-	// skybox cube
+	// tile cube
 	glBindVertexArray(tilesVAO);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, tiles_cubemapTexture);
@@ -825,6 +825,7 @@ void TrainView::draw()
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 	glBindVertexArray(0);
 	glDepthFunc(GL_LESS); // set depth function back to default
+
 	glDisable(GL_CULL_FACE);
 
 	glDepthFunc(GL_LEQUAL);
@@ -932,7 +933,7 @@ void TrainView::add_drop(float radius, float keep_time) {
 	glUniformMatrix4fv(glGetUniformLocation(interactive_frame->Program, "projection"), 1, GL_FALSE, Projection);
 	glUniformMatrix4fv(glGetUniformLocation(interactive_frame->Program, "view"), 1, GL_FALSE, View);
 	glUniformMatrix4fv(glGetUniformLocation(interactive_frame->Program, "model"), 1, GL_FALSE, &model[0][0]);
-	wave->Draw(*interactive_frame, tw->waveBrowser->value());
+	wave->Draw_wave(*interactive_frame, tw->waveBrowser->value());
 
 	glReadBuffer(GL_COLOR_ATTACHMENT0);
 	glm::vec3 uv;

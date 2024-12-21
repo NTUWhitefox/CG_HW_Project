@@ -1,0 +1,10 @@
+^C:\COMPUTER_GRAPHIC_PROJECT\CG_HW_PROJECT\HW_P3\FINAL\ROLLERCOASTERSTEMPLATE\ROLLERCOASTERS\CMAKEFILES\A63A4CCAC295A78F06F879A15F0F410C\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Computer_Graphic_Project/CG_HW_Project/HW_P3/final/RollerCoastersTemplate/RollerCoasters -BC:/Computer_Graphic_Project/CG_HW_Project/HW_P3/final/RollerCoastersTemplate/RollerCoasters --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file C:/Computer_Graphic_Project/CG_HW_Project/HW_P3/final/RollerCoastersTemplate/RollerCoasters/RollerCoasters.sln
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
