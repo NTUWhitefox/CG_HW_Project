@@ -110,7 +110,7 @@ TrainWindow(const int x, const int y)
 		splineBrowser->add("Linear");
 		splineBrowser->add("Cardinal Cubic");
 		splineBrowser->add("Cubic B-Spline");
-		splineBrowser->select(1);
+		splineBrowser->select(2);
 
 		pty += 110;
 
@@ -160,6 +160,23 @@ TrainWindow(const int x, const int y)
 		togglify(headlight);
 		smoke = new Fl_Button(745,pty,50,20,"Smoke");
 		togglify(smoke);
+
+		pty += 30;
+
+		framebuffer = new Fl_Browser(605,pty,190,180,"Frame Buffer Type");
+		framebuffer->type(2);		// select
+		framebuffer->callback((Fl_Callback*)damageCB, this);
+		framebuffer->add("default");
+		framebuffer->add("pixel");
+		framebuffer->add("offset");
+		framebuffer->add("sobel");
+		framebuffer->add("toon");
+		framebuffer->add("sharpen");
+		framebuffer->add("ascii");
+		framebuffer->add("motion blur");
+		framebuffer->add("fxaa");
+		framebuffer->add("chromaticAberration");
+		framebuffer->select(1);
 
 		// TODO: add widgets for all of your fancier features here
 #ifdef EXAMPLE_SOLUTION

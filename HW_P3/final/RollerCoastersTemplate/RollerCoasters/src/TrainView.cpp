@@ -212,6 +212,26 @@ unsigned int loadCubemap(vector<const GLchar*> faces)
 
 	return textureID;
 }
+
+void TrainView::set_fbo(int* framebuffer, unsigned int* textureColorbuffer) {
+
+	glGenFramebuffers(1, (GLuint*)framebuffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, *framebuffer);
+	// create a color attachment texture
+	glGenTextures(1, textureColorbuffer);
+	glBindTexture(GL_TEXTURE_2D, *textureColorbuffer);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w(), h(), 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, *textureColorbuffer, 0);
+
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+}
+
 void TrainView::draw()
 {
 
@@ -224,6 +244,80 @@ void TrainView::draw()
 	if (gladLoadGL())
 	{
 		//initiailize VAO, VBO, Shader...
+		if (!for_model) {
+			for_model = new
+				Shader(
+					"./assets/shaders/model_loading.vert",
+					nullptr, nullptr, nullptr,
+					"./assets/shaders/model_loading.frag");
+		}
+
+		if (!for_model_texture) {
+			for_model_texture = new
+				Shader(
+					"./assets/shaders/model_texture.vert",
+					nullptr, nullptr, nullptr,
+					"./assets/shaders/model_texture.frag");
+		}
+
+		if (!shark) {
+			shark = new Model("./assets/objects/WhiteShark.obj");
+		}
+
+		if (!slime) {
+			slime = new Model("./assets/objects/slime.obj");
+		}
+
+		if (!this->screen) {
+			this->screen = new
+				Shader(
+					"./assets/shaders/screen.vert",
+					nullptr, nullptr, nullptr,
+					"./assets/shaders/screen.frag");
+
+			float quadVertices[] = { // vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
+				// positions   // texCoords
+				-1.0f,  1.0f,  0.0f, 1.0f,
+				-1.0f, -1.0f,  0.0f, 0.0f,
+				 1.0f, -1.0f,  1.0f, 0.0f,
+
+				-1.0f,  1.0f,  0.0f, 1.0f,
+				 1.0f, -1.0f,  1.0f, 0.0f,
+				 1.0f,  1.0f,  1.0f, 1.0f
+			};
+			// screen quad VAO
+			glGenVertexArrays(1, &screen_quadVAO);
+			glGenBuffers(1, &screen_quadVBO);
+			glBindVertexArray(screen_quadVAO);
+			glBindBuffer(GL_ARRAY_BUFFER, screen_quadVBO);
+			glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+			glEnableVertexAttribArray(0);
+			glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+			glEnableVertexAttribArray(1);
+			glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+
+			screen->Use();
+			glUniform1i(glGetUniformLocation(screen->Program, "screenTexture"), 0);
+
+			glGenFramebuffers(1, &screen_framebuffer);
+			glBindFramebuffer(GL_FRAMEBUFFER, screen_framebuffer);
+
+			glGenTextures(1, &screen_textureColorbuffer);
+			glBindTexture(GL_TEXTURE_2D, screen_textureColorbuffer);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w(), h(), 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, screen_textureColorbuffer, 0);
+
+			glGenRenderbuffers(1, &screen_rbo);
+			glBindRenderbuffer(GL_RENDERBUFFER, screen_rbo);
+			glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, w(), h()); // use a single renderbuffer object for both a depth AND stencil buffer.
+			glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, screen_rbo); // now actually attach it
+			// now that we actually created the framebuffer and added all attachments we want to check if it is actually complete now
+			if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+				cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << endl;
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		}
 		if (!this->skybox) {
 			this->skybox = new
 				Shader(
@@ -292,9 +386,49 @@ void TrainView::draw()
 			};
 			skyBoxCubemapTexture = loadCubemap(faces);
 		}
+
+		if (framebuffer[0] == -1) {
+			for (int i = 0; i < 8; i++) {
+				set_fbo(&framebuffer[i], &textureColorbuffer[i]);
+				glUniform1i(glGetUniformLocation(screen->Program, ("TextureFBO" + to_string(i + 1)).c_str()), i);
+				trans[i] = glm::mat4(1.0f);
+			}
+		}
+		if (!fbo_shader) {
+			fbo_shader = new
+				Shader(
+					"./assets/shaders/fbo.vert",
+					nullptr, nullptr, nullptr,
+					"./assets/shaders/fbo.frag");
+			//fbo_shader->Use();
+			//glUniform1i(glGetUniformLocation(fbo_shader->Program, "texture_diffuse1"), 0);
+		}
 	}
 	else
 		throw std::runtime_error("Could not initialize GLAD!");
+
+	static int pre_w = w(), pre_h = h();
+	// Set up the view port
+	glViewport(0, 0, w(), h());
+	if (pre_w != w() || pre_h != h()) {
+		glBindFramebuffer(GL_FRAMEBUFFER, screen_framebuffer);
+
+		glBindTexture(GL_TEXTURE_2D, screen_textureColorbuffer);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w(), h(), 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, screen_textureColorbuffer, 0);
+
+		glBindRenderbuffer(GL_RENDERBUFFER, screen_rbo);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, w(), h()); // use a single renderbuffer object for both a depth AND stencil buffer.
+		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, screen_rbo); // now actually attach it
+		// now that we actually created the framebuffer and added all attachments we want to check if it is actually complete now
+		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+			cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << endl;
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	}
+	pre_w = w();
+	pre_h = h();
 
 	// Set up the view port
 	glViewport(0, 0, w(), h());
@@ -399,8 +533,38 @@ void TrainView::draw()
 		glLightfv(GL_LIGHT2, GL_POSITION, lightPosition3);
 		glLightfv(GL_LIGHT2, GL_DIFFUSE, blueLight);
 	}
+	/*
+	current_trans = glm::make_mat4(projection) * glm::make_mat4(view);
 
+	if (frame < 8) {
+		if (frame % 8 != 0) {
+			trans[frame % 8] = trans[frame % 8 - 1];
+		}
+		else {
+			trans[0] = current_trans;
+		}
+	}
+	else {
 
+		trans[7] = trans[6];
+		trans[6] = trans[5];
+		trans[5] = trans[4];
+		trans[4] = trans[3];
+		trans[3] = trans[2];
+		trans[2] = trans[1];
+		trans[1] = trans[0];
+		trans[0] = current_trans;
+	}
+	frame++;
+	for (int i = 0; i < 8; i++) {
+		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer[i]);
+		draw_scene_model(rocket, true, fbo_shader, trans[i], current_trans);
+	}*/
+
+	glBindFramebuffer(GL_FRAMEBUFFER, screen_framebuffer);
+	// make sure we clear the framebuffer's content
+	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	//*********************************************************************
 	// now draw the ground plane
 	//*********************************************************************
@@ -433,6 +597,32 @@ void TrainView::draw()
 	glGetFloatv(GL_PROJECTION_MATRIX, projection);
 	glGetFloatv(GL_MODELVIEW_MATRIX, view);
 	glm::mat4 view_without_translate = glm::mat4(glm::mat3(glm::make_mat4(view)));
+	glm::mat4 view_inv = glm::inverse(glm::make_mat4(view));
+	glm::vec3 my_pos(view_inv[3][0], view_inv[3][1], view_inv[3][2]);
+	glm::mat4 model = glm::mat4(1.0f);
+
+	//draw terrain
+	/*
+	for_model_texture->Use();
+	glActiveTexture(GL_TEXTURE0); // active proper texture unit before binding
+	glUniformMatrix4fv(glGetUniformLocation(for_model_texture->Program, "projection"), 1, GL_FALSE, projection);
+	glUniformMatrix4fv(glGetUniformLocation(for_model_texture->Program, "view"), 1, GL_FALSE, view);
+	glUniformMatrix4fv(glGetUniformLocation(for_model_texture->Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
+	glUniform1i(glGetUniformLocation(for_model_texture->Program, "texture1"), 0);
+	glBindTexture(GL_TEXTURE_2D, terrain_tex);
+	terrain->Draw(*for_model_texture);
+	glActiveTexture(GL_TEXTURE0);
+	*/
+
+	//draw shark
+	/*
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(0, 50, 0));
+	model = glm::scale(model, glm::vec3(1, 1, 1));
+	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0, 1.0, 0.0));
+	glUniformMatrix4fv(glGetUniformLocation(for_model->Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
+	shark->Draw(*for_model);
+	*/
 
 	//draw skybox
 	glDisable(GL_CULL_FACE);
@@ -447,6 +637,48 @@ void TrainView::draw()
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 	glBindVertexArray(0);
 	glDepthFunc(GL_LESS); // set depth function back to default
+
+	// now bind back to default framebuffer and draw a quad plane with the attached framebuffer color texture
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
+	// clear all relevant buffers
+	glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // set clear color to white (not really necessary actually, since we won't be able to see behind the quad anyways)
+	glClear(GL_COLOR_BUFFER_BIT);
+	this->screen->Use();
+	glUniform1i(glGetUniformLocation(screen->Program, "frame_buffer_type"), tw->framebuffer->value());
+	glUniform1f(glGetUniformLocation(screen->Program, "screen_w"), w());
+	glUniform1f(glGetUniformLocation(screen->Program, "screen_h"), h());
+	glUniform1f(glGetUniformLocation(screen->Program, "t"), 0.0f * 20); // tw->time = 0.0f
+	glUniform2f(glGetUniformLocation(screen->Program, "u_texelStep"), 1.0f / w(), 1.0f / h());
+	glUniform1i(glGetUniformLocation(screen->Program, "u_showEdges"), 0);
+	glUniform1i(glGetUniformLocation(screen->Program, "u_fxaaOn"), 1);
+	glUniform1i(glGetUniformLocation(screen->Program, "u_lumaThreshold"), 0.5);
+	glUniform1i(glGetUniformLocation(screen->Program, "u_mulReduce"), 8.0f);
+	glUniform1i(glGetUniformLocation(screen->Program, "u_minReduce"), 128.0f);
+	glUniform1i(glGetUniformLocation(screen->Program, "u_maxSpan"), 8.0f);
+	glBindVertexArray(screen_quadVAO);
+	glBindTexture(GL_TEXTURE_2D, screen_textureColorbuffer);	// use the color attachment texture as the texture of the quad plane
+
+	if (tw->framebuffer->value() == 8) {
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, textureColorbuffer[0]);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, textureColorbuffer[1]);
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, textureColorbuffer[2]);
+		glActiveTexture(GL_TEXTURE3);
+		glBindTexture(GL_TEXTURE_2D, textureColorbuffer[3]);
+		glActiveTexture(GL_TEXTURE4);
+		glBindTexture(GL_TEXTURE_2D, textureColorbuffer[4]);
+		glActiveTexture(GL_TEXTURE5);
+		glBindTexture(GL_TEXTURE_2D, textureColorbuffer[5]);
+		glActiveTexture(GL_TEXTURE6);
+		glBindTexture(GL_TEXTURE_2D, textureColorbuffer[6]);
+		glActiveTexture(GL_TEXTURE7);
+		glBindTexture(GL_TEXTURE_2D, textureColorbuffer[7]);
+	}
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+	glUseProgram(0);
 }
 
 //************************************************************************
@@ -877,6 +1109,35 @@ void TrainView::drawTrain(TrainView*, bool doingShadows)
 	drawWheel(qt + forward * (-0.6f) + cross_t * (-1) + up * 0.2f, f, c * (-1), u, 1.5f, 0.5f);
 	drawWheel(qt + forward * (-0.6f) + cross_t + up * 0.2f, f, c, u, 1.5f, 0.5f);
 	drawWheel(qt + forward * 0.6f + up * 0.6f, f, u, c, 0.8f, 3.0f);
+
+	/*
+	// slime
+	Pnt3f slime_pos = qt + up;
+	float rotation[16] = {
+				f.x, f.y, f.z, 0.0,
+				c.x, c.y, c.z, 0.0,
+				u.x, u.y, u.z, 0.0,
+				0.0, 0.0, 0.0, 1.0
+	};
+
+	GLfloat projection[16];
+	GLfloat view_ptr[16];
+	glGetFloatv(GL_PROJECTION_MATRIX, projection);
+	glGetFloatv(GL_MODELVIEW_MATRIX, view_ptr);
+	glm::mat4 view = glm::make_mat4(view_ptr);
+	view = glm::translate(view, glm::vec3(slime_pos.x, slime_pos.y, slime_pos.z));
+	view = view * glm::make_mat4(rotation);
+	view = glm::rotate(view, glm::radians(90.0f), glm::vec3(1, 0, 0));//why???
+
+	glm::mat4 model = glm::mat4(1.0f);
+	model = glm::scale(model, glm::vec3(1, 1, 1));
+
+	for_model->Use();
+	glUniformMatrix4fv(glGetUniformLocation(for_model->Program, "projection"), 1, GL_FALSE, projection);
+	glUniformMatrix4fv(glGetUniformLocation(for_model->Program, "view"), 1, GL_FALSE, glm::value_ptr(view));
+	glUniformMatrix4fv(glGetUniformLocation(for_model->Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
+	slime->Draw(*for_model);
+	*/
 
 	// smoke
 	if (tw->smoke->value()) {

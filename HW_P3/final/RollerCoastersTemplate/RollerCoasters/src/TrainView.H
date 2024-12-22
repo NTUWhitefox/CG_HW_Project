@@ -85,6 +85,8 @@ class TrainView : public Fl_Gl_Window
 
 		void drawWheel(Pnt3f qt, Pnt3f forward, Pnt3f cross, Pnt3f up, float r, float w);
 
+		void set_fbo(int* framebuffer, unsigned int* textureColorbuffer);
+
 		// setup the projection - assuming that the projection stack has been
 		// cleared for you
 		void setProjection();
@@ -109,11 +111,29 @@ class TrainView : public Fl_Gl_Window
 		Pnt3f			smoke_pos[50];
 		int				smoke_size[50] = { 0 };
 		float			physics = 0;
+		int				framebuffer[8] = { -1 };
+		unsigned int	textureColorbuffer[8];
+		glm::mat4		current_trans = glm::mat4(1.0f);
+		glm::mat4		trans[8];
+		int				frame = 0;
 
 		TrainWindow*	tw;				// The parent of this display window
 		CTrack*			m_pTrack;		// The track of the entire scene
+
+		//model
+		Model* shark = nullptr;
+		Model* slime = nullptr;
+		Shader* for_model = nullptr;
+		Shader* for_model_texture = nullptr;
 		//skybox
 		GLuint skyBoxCubemapTexture;//skybox
 		GLuint skyboxVAO, skyboxVBO;
 		Shader* skybox = nullptr;
+		//framebuffer
+		Shader* screen = nullptr;
+		Shader* fbo_shader = nullptr;//for motion blur
+		GLuint screen_framebuffer;
+		GLuint screen_textureColorbuffer;
+		GLuint screen_rbo;
+		GLuint screen_quadVAO, screen_quadVBO;
 };
