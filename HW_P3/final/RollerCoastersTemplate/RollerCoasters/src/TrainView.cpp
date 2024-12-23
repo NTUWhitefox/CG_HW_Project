@@ -45,6 +45,10 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "model.h"
 
+#include <array>
+
+#define _USE_MATH_DEFINES
+#include <math.h>
 
 
 #ifdef EXAMPLE_SOLUTION
@@ -180,8 +184,7 @@ int TrainView::handle(int event)
 
 //************************************************************************
 //
-// * this is the code that actually draws the window
-//   it puts a lot of the work into other routines to simplify things
+// * Some utility code here
 //========================================================================
 unsigned int loadCubemap(vector<const GLchar*> faces)
 {
@@ -212,7 +215,19 @@ unsigned int loadCubemap(vector<const GLchar*> faces)
 
 	return textureID;
 }
+std::array<float, 16> perspectiveMatrix(float fov, float aspect, float nearPlane, float farPlane) {
+	float f = 1.0f / std::tan(fov * 0.5f * M_PI / 180.0f); // Convert FOV to radians and calculate cotangent
+	float nf = 1.0f / (nearPlane - farPlane);
 
+	std::array<float, 16> matrix = {
+		f / aspect, 0.0f,  0.0f,                               0.0f,
+		0.0f,       f,     0.0f,                               0.0f,
+		0.0f,       0.0f,  (farPlane + nearPlane) * nf,       -1.0f,
+		0.0f,       0.0f,  (2.0f * farPlane * nearPlane) * nf, 0.0f
+	};
+
+	return matrix;
+}
 void TrainView::set_fbo(int* framebuffer, unsigned int* textureColorbuffer) {
 
 	glGenFramebuffers(1, (GLuint*)framebuffer);
@@ -231,7 +246,11 @@ void TrainView::set_fbo(int* framebuffer, unsigned int* textureColorbuffer) {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 }
-
+//************************************************************************
+//
+// * this is the code that actually draws the window
+//   it puts a lot of the work into other routines to simplify things
+//========================================================================
 void TrainView::draw()
 {
 
@@ -398,7 +417,7 @@ void TrainView::draw()
 			};
 			skyBoxCubemapTexture = loadCubemap(faces);
 		}
-
+		//Load billboard tree
 		if (!this->billboardTree) {
 			this->billboardTree = new Shader(
                 "./assets/shaders/billboardTree.vert",
@@ -433,6 +452,16 @@ void TrainView::draw()
 			glEnableVertexAttribArray(1);
 
 			billboardTreeTexture = TextureFromFile("/assets/images/tree_upsidedown.png", ".");
+		}
+
+		//Load projector (project texture with texture matrix)
+		if (!projectorShader) {
+			this->projectorShader = new Shader(
+				"./assets/shaders/projector.vert",
+				nullptr, nullptr, nullptr,
+				"./assets/shaders/projector.frag"
+			);
+			projectorTexture = TextureFromFile("/assets/images/earth.png", ".");
 		}
 
 		if (framebuffer[0] == -1) {
@@ -613,6 +642,44 @@ void TrainView::draw()
 		draw_scene_model(rocket, true, fbo_shader, trans[i], current_trans);
 	}*/
 
+	//view and projection matrix setup
+	GLfloat projection[16];
+	GLfloat view[16];
+	glGetFloatv(GL_PROJECTION_MATRIX, projection);
+	glGetFloatv(GL_MODELVIEW_MATRIX, view);
+	glm::mat4 view_without_translate = glm::mat4(glm::mat3(glm::make_mat4(view)));
+	glm::mat4 view_inv = glm::inverse(glm::make_mat4(view));
+	glm::vec3 my_pos(view_inv[3][0], view_inv[3][1], view_inv[3][2]);
+	glm::mat4 model = glm::mat4(1.0f);
+
+	//projector setup start
+	if (tw->projector->value()) {
+		glMatrixMode(GL_TEXTURE);
+		glLoadIdentity();
+		glTranslatef(0.5f, 0.5f, 0.0f);
+		glScalef(0.5f, 0.5f, 1.0f);
+		//float scaleX = frustumWidth / textureWidth;
+		//float scaleY = frustumHeight / textureHeight;
+		//glScalef(scaleX, scaleY, 1.0f);
+		glMultMatrixf(projection);
+		glMultMatrixf(view);// Apply the camera's view matrix
+		glMatrixMode(GL_MODELVIEW);// Return to modelview matrix mode
+		glEnable(GL_TEXTURE_2D);
+		glBindTexture(GL_TEXTURE_2D, projectorTexture);// Enable texture generation for projection
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
+		glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
+		//glTexGeni(GL_R, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
+		//glTexGeni(GL_Q, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
+		glEnable(GL_TEXTURE_GEN_S);
+		glEnable(GL_TEXTURE_GEN_T);
+		//glEnable(GL_TEXTURE_GEN_R);
+		//glEnable(GL_TEXTURE_GEN_Q);
+	}
+	//projector setup end
+
+
 	glBindFramebuffer(GL_FRAMEBUFFER, screen_framebuffer);
 	// make sure we clear the framebuffer's content
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -644,14 +711,6 @@ void TrainView::draw()
 		unsetupShadows();
 	}
 
-	GLfloat projection[16];
-	GLfloat view[16];
-	glGetFloatv(GL_PROJECTION_MATRIX, projection);
-	glGetFloatv(GL_MODELVIEW_MATRIX, view);
-	glm::mat4 view_without_translate = glm::mat4(glm::mat3(glm::make_mat4(view)));
-	glm::mat4 view_inv = glm::inverse(glm::make_mat4(view));
-	glm::vec3 my_pos(view_inv[3][0], view_inv[3][1], view_inv[3][2]);
-	glm::mat4 model = glm::mat4(1.0f);
 
 	//draw terrain
 	/*
@@ -702,7 +761,7 @@ void TrainView::draw()
 	flower->Draw(*for_model_texture);
 	glActiveTexture(GL_TEXTURE0);
 
-	//draw skybox
+	//draw skybox section start
 	glDisable(GL_CULL_FACE);
 	glDepthFunc(GL_LEQUAL);
 	skybox->Use();
@@ -715,15 +774,13 @@ void TrainView::draw()
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 	glBindVertexArray(0);
 	glDepthFunc(GL_LESS); // set depth function back to default
-
-	//draw billboard tree
+	//draw skybox section end
+	// ******************************************************************************************************************
+	//draw billboard tree start
 	
 	glm::vec3 treePos(70, 20, 0);     // Tree position
 	glm::vec3 up(0.0f, 1.0f, 0.0f);
-	// Calculate billboard orientation
-	glm::vec3 lookDir = glm::normalize(my_pos - treePos);
-	//cout<<my_pos.x<<" "<<my_pos.y<<" "<<my_pos.z<<endl;
-    //cout<<treePos.x<<" "<<treePos.y<<" "<<treePos.z<<endl;
+	glm::vec3 lookDir = glm::normalize(my_pos - treePos); // Calculate billboard orientation
 	glm::vec3 right = glm::normalize(glm::cross(up, lookDir));
 	glm::vec3 newUp = glm::cross(lookDir, right);
 	model = glm::mat4(1.0f);
@@ -735,9 +792,7 @@ void TrainView::draw()
 
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glDepthMask(GL_FALSE); // Disable depth writes
-
-	//glUniformMatrix4fv(glGetUniformLocation(billboardTree->Program, "billBoardTree"), 1, GL_FALSE, glm::value_ptr(model));
+	glDepthMask(GL_FALSE); // setting start
 	billboardTree->Use();
 	glUniform1f(glGetUniformLocation(billboardTree->Program, "billboardTree"), billboardTreeTexture);
 	glUniformMatrix4fv(glGetUniformLocation(billboardTree->Program, "view"), 1, GL_FALSE, view);
@@ -747,15 +802,29 @@ void TrainView::draw()
 	glBindVertexArray(billboardtree_quadVAO);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, billboardTreeTexture);
-	// Pass view and projection matrices to the shader
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
-	glBindVertexArray(0);
+	glBindVertexArray(0);// setting end
 	glDisable(GL_BLEND);
     glDepthMask(GL_TRUE);
+	//draw billboard tree end
+	// ******************************************************************************************************************
+
 	
-	// now bind back to default framebuffer and draw a quad plane with the attached framebuffer color texture
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	// Draw your scene
+	//drawObjects();
+
+	//projector disable
+	glDisable(GL_TEXTURE_GEN_S);
+	glDisable(GL_TEXTURE_GEN_T);
+	glDisable(GL_TEXTURE_GEN_R);
+	glDisable(GL_TEXTURE_GEN_Q);
+	glDisable(GL_TEXTURE_2D);
+	
+
+	//frame buffer create different view section start
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);// now bind back to default framebuffer and draw a quad plane with the attached framebuffer color texture
 	glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
 	// clear all relevant buffers
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // set clear color to white (not really necessary actually, since we won't be able to see behind the quad anyways)
@@ -795,6 +864,7 @@ void TrainView::draw()
 	}
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 	glUseProgram(0);
+	//frame buffer create different view section end
 }
 
 //************************************************************************
@@ -810,7 +880,7 @@ setProjection()
 	// Compute the aspect ratio (we'll need it)
 	float aspect = static_cast<float>(w()) / static_cast<float>(h());
 
-	// Check whether we use the world camp
+	// Check whether we use the world cam
 	if (tw->worldCam->value())
 		arcball.setProjection(false);
 	// Or we use the top cam

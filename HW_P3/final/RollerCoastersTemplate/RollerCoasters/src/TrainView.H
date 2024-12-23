@@ -30,6 +30,7 @@
 #include "RenderUtilities/Texture.h"
 #include <vector>
 #include <tuple>
+
 // Preclarify for preventing the compiler error
 class TrainWindow;
 class CTrack;
@@ -136,7 +137,9 @@ class TrainView : public Fl_Gl_Window
 		Shader* billboardTree = nullptr;
 		GLuint billboardTreeTexture;
 		GLuint billboardtree_quadVAO, billboardtree_quadVBO, billboardtree_quadEBO;
-		
+		//flash light (project image with texture matrix)
+		GLuint projectorTexture;
+		Shader* projectorShader = nullptr;
 		//framebuffer
 		Shader* screen = nullptr;
 		Shader* fbo_shader = nullptr;//for motion blur

@@ -151,6 +151,8 @@ TrainWindow(const int x, const int y)
 
 		physics = new Fl_Button(605,pty,60,20,"Physics");
 		togglify(physics);
+		projector = new Fl_Button(670, pty, 60, 20, "Projector");
+		togglify(projector);
 
 		pty += 30;
 
@@ -177,6 +179,7 @@ TrainWindow(const int x, const int y)
 		framebuffer->add("fxaa");
 		framebuffer->add("chromaticAberration");
 		framebuffer->select(1);
+		
 
 		// TODO: add widgets for all of your fancier features here
 #ifdef EXAMPLE_SOLUTION

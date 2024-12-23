@@ -1,1 +1,2 @@
 skybox 3,
+billboardobject 3,
