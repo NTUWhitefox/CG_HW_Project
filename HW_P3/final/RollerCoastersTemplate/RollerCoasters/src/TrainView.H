@@ -147,4 +147,11 @@ class TrainView : public Fl_Gl_Window
 		GLuint screen_textureColorbuffer;
 		GLuint screen_rbo;
 		GLuint screen_quadVAO, screen_quadVBO;
+
+		//rock
+		Model* rock = nullptr;
+		GLuint rock_diff;
+		GLuint rock_spec;
+		GLuint rock_normal;
+		Shader* rockShader = nullptr;
 };

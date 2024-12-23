@@ -83,7 +83,6 @@ private:
         }
         // retrieve the directory path of the filepath
         directory = path.substr(0, path.find_last_of('/'));
-
         // process ASSIMP's root node recursively
         processNode(scene->mRootNode, scene);
     }
@@ -106,7 +105,6 @@ private:
         {
             processNode(node->mChildren[i], scene);
         }
-
     }
 
     Mesh processMesh(aiMesh* mesh, const aiScene* scene)
