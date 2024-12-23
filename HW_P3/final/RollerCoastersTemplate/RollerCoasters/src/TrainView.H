@@ -121,8 +121,11 @@ class TrainView : public Fl_Gl_Window
 		CTrack*			m_pTrack;		// The track of the entire scene
 
 		//model
-		Model* shark = nullptr;
-		Model* slime = nullptr;
+		Model* tree = nullptr;
+		Model* flower = nullptr;
+		int	tree_tex = -1;//tree and flower texture
+		Model* capybara = nullptr;
+		int	capybara_tex = -1;
 		Shader* for_model = nullptr;
 		Shader* for_model_texture = nullptr;
 		//skybox

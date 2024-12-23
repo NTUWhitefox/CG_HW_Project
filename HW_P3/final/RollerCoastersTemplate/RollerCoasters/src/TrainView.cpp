@@ -260,12 +260,24 @@ void TrainView::draw()
 					"./assets/shaders/model_texture.frag");
 		}
 
-		if (!shark) {
-			shark = new Model("./assets/objects/WhiteShark.obj");
+		if (!tree) {
+			tree = new Model("./assets/objects/tree.obj");
 		}
 
-		if (!slime) {
-			slime = new Model("./assets/objects/slime.obj");
+		if (!flower) {
+			flower = new Model("./assets/objects/flower.obj");
+		}
+
+		if (tree_tex == -1) {
+			tree_tex = TextureFromFile("./assets/objects/texture_gradient.png", ".");
+		}
+
+		if (!capybara) {
+			capybara = new Model("./assets/objects/capybara.obj");
+		}
+
+		if (capybara_tex == -1) {
+			capybara_tex = TextureFromFile("./assets/objects/Capybara_Base_color.png", ".");
 		}
 
 		if (!this->screen) {
@@ -623,6 +635,32 @@ void TrainView::draw()
 	glUniformMatrix4fv(glGetUniformLocation(for_model->Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
 	shark->Draw(*for_model);
 	*/
+
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(0, 0, 0));
+	model = glm::scale(model, glm::vec3(2, 2, 2));
+	for_model_texture->Use();
+	glActiveTexture(GL_TEXTURE0); // active proper texture unit before binding
+	glUniformMatrix4fv(glGetUniformLocation(for_model_texture->Program, "projection"), 1, GL_FALSE, projection);
+	glUniformMatrix4fv(glGetUniformLocation(for_model_texture->Program, "view"), 1, GL_FALSE, view);
+	glUniformMatrix4fv(glGetUniformLocation(for_model_texture->Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
+	glUniform1i(glGetUniformLocation(for_model_texture->Program, "texture1"), 0);
+	glBindTexture(GL_TEXTURE_2D, tree_tex);
+	tree->Draw(*for_model_texture);
+	glActiveTexture(GL_TEXTURE0);
+
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(-15, 0, 0));
+	model = glm::scale(model, glm::vec3(5, 5, 5));
+	for_model_texture->Use();
+	glActiveTexture(GL_TEXTURE0); // active proper texture unit before binding
+	glUniformMatrix4fv(glGetUniformLocation(for_model_texture->Program, "projection"), 1, GL_FALSE, projection);
+	glUniformMatrix4fv(glGetUniformLocation(for_model_texture->Program, "view"), 1, GL_FALSE, view);
+	glUniformMatrix4fv(glGetUniformLocation(for_model_texture->Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
+	glUniform1i(glGetUniformLocation(for_model_texture->Program, "texture1"), 0);
+	glBindTexture(GL_TEXTURE_2D, tree_tex);
+	flower->Draw(*for_model_texture);
+	glActiveTexture(GL_TEXTURE0);
 
 	//draw skybox
 	glDisable(GL_CULL_FACE);
@@ -1110,9 +1148,8 @@ void TrainView::drawTrain(TrainView*, bool doingShadows)
 	drawWheel(qt + forward * (-0.6f) + cross_t + up * 0.2f, f, c, u, 1.5f, 0.5f);
 	drawWheel(qt + forward * 0.6f + up * 0.6f, f, u, c, 0.8f, 3.0f);
 
-	/*
-	// slime
-	Pnt3f slime_pos = qt + up;
+	// capybara
+	Pnt3f capybara_pos = qt + up * 1.2f + forward * (-0.4f);
 	float rotation[16] = {
 				f.x, f.y, f.z, 0.0,
 				c.x, c.y, c.z, 0.0,
@@ -1125,19 +1162,25 @@ void TrainView::drawTrain(TrainView*, bool doingShadows)
 	glGetFloatv(GL_PROJECTION_MATRIX, projection);
 	glGetFloatv(GL_MODELVIEW_MATRIX, view_ptr);
 	glm::mat4 view = glm::make_mat4(view_ptr);
-	view = glm::translate(view, glm::vec3(slime_pos.x, slime_pos.y, slime_pos.z));
+	view = glm::translate(view, glm::vec3(capybara_pos.x, capybara_pos.y, capybara_pos.z));
 	view = view * glm::make_mat4(rotation);
-	view = glm::rotate(view, glm::radians(90.0f), glm::vec3(1, 0, 0));//why???
+	view = glm::rotate(view, glm::radians(90.0f), glm::vec3(1, 0, 0));
+	view = glm::rotate(view, glm::radians(90.0f), glm::vec3(0, 1, 0));
 
 	glm::mat4 model = glm::mat4(1.0f);
-	model = glm::scale(model, glm::vec3(1, 1, 1));
+	model = glm::scale(model, glm::vec3(4, 4, 4));
 
-	for_model->Use();
-	glUniformMatrix4fv(glGetUniformLocation(for_model->Program, "projection"), 1, GL_FALSE, projection);
-	glUniformMatrix4fv(glGetUniformLocation(for_model->Program, "view"), 1, GL_FALSE, glm::value_ptr(view));
-	glUniformMatrix4fv(glGetUniformLocation(for_model->Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
-	slime->Draw(*for_model);
-	*/
+	for_model_texture->Use();
+	glActiveTexture(GL_TEXTURE0); // active proper texture unit before binding
+	glUniformMatrix4fv(glGetUniformLocation(for_model_texture->Program, "projection"), 1, GL_FALSE, projection);
+	glUniformMatrix4fv(glGetUniformLocation(for_model_texture->Program, "view"), 1, GL_FALSE, glm::value_ptr(view));
+	glUniformMatrix4fv(glGetUniformLocation(for_model_texture->Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
+	glUniform1i(glGetUniformLocation(for_model_texture->Program, "texture1"), 0);
+	glBindTexture(GL_TEXTURE_2D, capybara_tex);
+	capybara->Draw(*for_model_texture);
+	glActiveTexture(GL_TEXTURE0);
+
+	glUseProgram(0);
 
 	// smoke
 	if (tw->smoke->value()) {
