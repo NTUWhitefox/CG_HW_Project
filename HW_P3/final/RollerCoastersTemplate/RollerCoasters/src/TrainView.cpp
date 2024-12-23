@@ -399,6 +399,42 @@ void TrainView::draw()
 			skyBoxCubemapTexture = loadCubemap(faces);
 		}
 
+		if (!this->billboardTree) {
+			this->billboardTree = new Shader(
+                "./assets/shaders/billboardTree.vert",
+				nullptr, nullptr, nullptr,
+            "./assets/shaders/billboardTree.frag");
+			float quadVertices[] = {
+				// Positions         // Texture Coordinates
+				-0.5f,  1.0f, 0.0f,  0.0f, 1.0f,  // Top-left
+				 0.5f,  1.0f, 0.0f,  1.0f, 1.0f,  // Top-right
+				 0.5f, -1.0f, 0.0f,  1.0f, 0.0f,  // Bottom-right
+				-0.5f, -1.0f, 0.0f,  0.0f, 0.0f   // Bottom-left
+			};
+			unsigned int indices[] = {
+				0, 1, 2,  // First triangle
+				0, 2, 3   // Second triangle
+			};
+			glGenVertexArrays(1, &billboardtree_quadVAO);
+			glGenBuffers(1, &billboardtree_quadVBO);
+			glGenBuffers(1, &billboardtree_quadEBO);
+
+			glBindVertexArray(billboardtree_quadVAO);
+			glBindBuffer(GL_ARRAY_BUFFER, billboardtree_quadVBO);
+			glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
+
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, billboardtree_quadEBO);
+			glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+			// Position Attribute
+			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+			glEnableVertexAttribArray(0);
+			// Texture Coordinate Attribute
+			glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+			glEnableVertexAttribArray(1);
+
+			billboardTreeTexture = TextureFromFile("/assets/images/tree_upsidedown.png", ".");
+		}
+
 		if (framebuffer[0] == -1) {
 			for (int i = 0; i < 8; i++) {
 				set_fbo(&framebuffer[i], &textureColorbuffer[i]);
@@ -418,6 +454,10 @@ void TrainView::draw()
 	}
 	else
 		throw std::runtime_error("Could not initialize GLAD!");
+
+	//######################################################################
+	//This is where assets loading end
+	//######################################################################
 
 	static int pre_w = w(), pre_h = h();
 	// Set up the view port
@@ -676,6 +716,44 @@ void TrainView::draw()
 	glBindVertexArray(0);
 	glDepthFunc(GL_LESS); // set depth function back to default
 
+	//draw billboard tree
+	
+	glm::vec3 treePos(70, 20, 0);     // Tree position
+	glm::vec3 up(0.0f, 1.0f, 0.0f);
+	// Calculate billboard orientation
+	glm::vec3 lookDir = glm::normalize(my_pos - treePos);
+	//cout<<my_pos.x<<" "<<my_pos.y<<" "<<my_pos.z<<endl;
+    //cout<<treePos.x<<" "<<treePos.y<<" "<<treePos.z<<endl;
+	glm::vec3 right = glm::normalize(glm::cross(up, lookDir));
+	glm::vec3 newUp = glm::cross(lookDir, right);
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, treePos);
+	model[0] = glm::vec4(right, 0.0f);
+	model[1] = glm::vec4(newUp, 0.0f);
+	model[2] = glm::vec4(lookDir, 0.0f);
+	model = glm::scale(model, glm::vec3(25.0f, 25.0f, 25.0f));
+
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glDepthMask(GL_FALSE); // Disable depth writes
+
+	//glUniformMatrix4fv(glGetUniformLocation(billboardTree->Program, "billBoardTree"), 1, GL_FALSE, glm::value_ptr(model));
+	billboardTree->Use();
+	glUniform1f(glGetUniformLocation(billboardTree->Program, "billboardTree"), billboardTreeTexture);
+	glUniformMatrix4fv(glGetUniformLocation(billboardTree->Program, "view"), 1, GL_FALSE, view);
+	glUniformMatrix4fv(glGetUniformLocation(billboardTree->Program, "projection"), 1, GL_FALSE, projection);
+	glm::mat4 billTreeModel = glm::scale(glm::mat4(1.0f), glm::vec3(25, 25, 25));
+	glUniformMatrix4fv(glGetUniformLocation(billboardTree->Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
+	glBindVertexArray(billboardtree_quadVAO);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, billboardTreeTexture);
+	// Pass view and projection matrices to the shader
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+	glBindVertexArray(0);
+	glDisable(GL_BLEND);
+    glDepthMask(GL_TRUE);
+	
 	// now bind back to default framebuffer and draw a quad plane with the attached framebuffer color texture
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.

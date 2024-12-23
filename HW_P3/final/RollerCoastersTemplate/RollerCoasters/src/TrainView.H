@@ -129,9 +129,14 @@ class TrainView : public Fl_Gl_Window
 		Shader* for_model = nullptr;
 		Shader* for_model_texture = nullptr;
 		//skybox
-		GLuint skyBoxCubemapTexture;//skybox
+		GLuint skyBoxCubemapTexture;
 		GLuint skyboxVAO, skyboxVBO;
 		Shader* skybox = nullptr;
+		//billboard tree
+		Shader* billboardTree = nullptr;
+		GLuint billboardTreeTexture;
+		GLuint billboardtree_quadVAO, billboardtree_quadVBO, billboardtree_quadEBO;
+		
 		//framebuffer
 		Shader* screen = nullptr;
 		Shader* fbo_shader = nullptr;//for motion blur
