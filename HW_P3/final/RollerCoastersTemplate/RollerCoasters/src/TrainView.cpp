@@ -520,6 +520,17 @@ void TrainView::draw()
 				nullptr, nullptr, nullptr,
 				"./assets/shaders/rain.frag");
 		}
+
+		if (trunkShader == nullptr) {
+			trunkCylinder = new Model("./assets/objects/cylinder.glb");
+			trunk_color = TextureFromFile("/assets/images/wood_0025_color_1k.jpg", ".");
+			trunk_height = TextureFromFile("/assets/images/wood_0025_height_1k.png", ".");
+			trunk_normal = TexTureFromFile("/assets/images/wood_0025_normal_opengl_1k.png", ".");
+			trunkShader = new Shader(
+				"./assets/shaders/trunk.vert",
+				nullptr, nullptr, nullptr,
+				"./assets/shaders/trunk.frag");
+		}
 	}
 	else
 		throw std::runtime_error("Could not initialize GLAD!");
@@ -1483,3 +1494,116 @@ doPick()
 //========================================================================
 //Functions ad by whitefox 
 //========================================================================
+void TrainView::esfera(int radio, bool draw_line) {
+	float px, py, pz;
+	int i, j;
+	float incO = 2 * M_PI / sphere_divide;
+	float incA = M_PI / sphere_divide;
+	glBegin(GL_TRIANGLE_STRIP);
+	for (i = 0; i <= sphere_divide; i++) {
+		for (j = 0; j <= sphere_divide; j++) {
+			pz = cos(M_PI - (incA * j)) * radio;
+			py = sin(M_PI - (incA * j)) * sin(incO * i) * radio;
+			px = sin(M_PI - (incA * j)) * cos(incO * i) * radio;
+			//printf("%lf%lf%lf\n", px, py, pz);
+			glVertex3f(px, py, pz);
+			pz = cos(M_PI - (incA * j)) * radio;
+			py = sin(M_PI - (incA * j)) * sin(incO * (i + 1)) * radio;
+			px = sin(M_PI - (incA * j)) * cos(incO * (i + 1)) * radio;
+			glVertex3f(px, py, pz);
+		}
+	}
+	glEnd();
+
+	if (draw_line) {
+		glColor3ub(0, 0, 0);
+		glBegin(GL_LINE_STRIP);
+		for (i = 0; i <= sphere_divide; i++) {
+			for (j = 0; j <= sphere_divide; j++) {
+
+				pz = cos(M_PI - (incA * j)) * radio;
+				py = sin(M_PI - (incA * j)) * sin(incO * i) * radio;
+				px = sin(M_PI - (incA * j)) * cos(incO * i) * radio;
+				//printf("%lf%lf%lf\n", px, py, pz);
+				glVertex3f(px, py, pz);
+				pz = cos(M_PI - (incA * j)) * radio;
+				py = sin(M_PI - (incA * j)) * sin(incO * (i + 1)) * radio;
+				px = sin(M_PI - (incA * j)) * cos(incO * (i + 1)) * radio;
+				glVertex3f(px, py, pz);
+
+			}
+		}
+		glEnd();
+	}
+}
+// Function to draw a cylinder with a shader
+void drawTexturedLog(double height, double base, GLuint shaderProgram) {
+	// Activate shader program
+	glUseProgram(shaderProgram);
+
+	// Scale the cylinder based on height and base parameters
+	glPushMatrix();
+	glScalef(base, height, base);
+
+	// Render the cylinder using your mesh or predefined object
+	GLUquadric* quadric = gluNewQuadric();
+	gluQuadricTexture(quadric, GL_TRUE); // Enable texture coordinates
+	gluCylinder(quadric, 1.0, 0.8, 1.0, 20, 20); // Use normalized cylinder dimensions
+	gluDeleteQuadric(quadric);
+
+	glPopMatrix();
+
+	// Deactivate shader
+	glUseProgram(0);
+}
+
+// Leaves rendering (fixed pipeline, as per your requirement)
+void drawLeaf(int radius) {
+	glPushMatrix();
+	esfera(radius, false); // Reuse the existing esfera function
+	glPopMatrix();
+}
+
+// Recursive function to draw the tree
+void drawTreeRecursive(double height, double base, GLuint logShader, int depth,
+	double angleSpread, int branchCount) {
+	if (depth <= 0) return;
+
+	// Draw the trunk
+	drawTexturedLog(height, base, logShader);
+
+	// Move to the top of the trunk
+	glPushMatrix();
+	glTranslatef(0.0, height, 0.0);
+
+	// Reduce height and base for child branches
+	height *= 0.7;
+	base *= 0.7;
+
+	// Generate child branches
+	for (int i = 0; i < branchCount; i++) {
+		double angle = angleSpread * (i - branchCount / 2.0);
+		glPushMatrix();
+		glRotatef(angle, 0, 1, 0); // Spread branches around Y-axis
+		glRotatef(20 + rand() % 40, 1, 0, 0); // Add a slight upward tilt
+		drawTreeRecursive(height, base, logShader, depth - 1, angleSpread, branchCount);
+		glPopMatrix();
+	}
+
+	// Add leaves when depth is small
+	if (depth <= 2) {
+		drawLeaf(base * 2); // Use the base size to scale the leaf radius
+	}
+
+	glPopMatrix();
+}
+
+// Main tree-drawing function
+void drawTree(double height, double base, GLuint logShader, int depth = 5,
+	double angleSpread = 45.0, int branchCount = 3) {
+	glPushMatrix();
+	glTranslatef(0.0, -10.0, 0.0); // Position the tree
+	drawTreeRecursive(height, base, logShader, depth, angleSpread, branchCount);
+	glPopMatrix();
+}
+

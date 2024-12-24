@@ -177,6 +177,13 @@ class TrainView : public Fl_Gl_Window
 		RainSystem* rainSystem = nullptr;
 		Shader* rainShader = nullptr;
 		GLuint rainTexture;
+
+		//fractal tree
+		Model* trunkCylinder = nullptr;
+		Shader* trunkShader = nullptr;
+		GLuint trunk_color;
+		GLuint trunk_height;
+		GLuint trunk_normal;
 };
 
 struct RainParticle {
