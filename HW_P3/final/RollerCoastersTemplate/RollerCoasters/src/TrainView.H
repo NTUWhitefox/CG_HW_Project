@@ -25,15 +25,24 @@
 *************************************************************************/
 
 #pragma once
+#include <iostream>
+#include <glad/glad.h>
+#include <glm/glm.hpp>
+#include <glm/gtx/transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <GL/glu.h>
+
 #include "RenderUtilities/BufferObject.h"
 #include "RenderUtilities/Shader.h"
 #include "RenderUtilities/Texture.h"
 #include <vector>
 #include <tuple>
 
+
 // Preclarify for preventing the compiler error
 class TrainWindow;
 class CTrack;
+class RainSystem;
 
 
 //#######################################################################
@@ -104,6 +113,7 @@ class TrainView : public Fl_Gl_Window
 
 		int				DIVIDE_LINE = 100;
 		float			t_time = 0;
+		float 			t_delta_time = 0;
 		int				line_type = 1;
 		bool			isarclen = true;
 		float			arclength = 0;
@@ -157,4 +167,123 @@ class TrainView : public Fl_Gl_Window
 
 		//grasstexture for floor
         GLuint grass = -1;
+
+		//rain
+		RainSystem* rainSystem = nullptr;
+		Shader* rainShader = nullptr;
+		GLuint rainTexture;
+};
+
+struct RainParticle {
+	glm::vec3 position; // Position of the raindrop
+	float lifetime;     // Lifetime of the particle (not used here but useful for effects)
+};
+
+class RainSystem {
+private:
+	unsigned int VAO, VBO, instanceVBO;
+	GLuint rainTexture;
+	std::vector<glm::vec3> rainPositions;
+	float areaWidth, areaDepth;
+	float rainSpeed;
+public:
+	RainSystem(float areaWidth, float areaDepth, int numParticles, float rainSpeed, GLuint rainTexture)
+		: areaWidth(areaWidth), areaDepth(areaDepth), rainSpeed(rainSpeed), rainTexture(rainTexture) {
+		// Load rain texture
+		// Generate random initial positions for raindrops
+		for (int i = 0; i < numParticles; ++i) {
+			rainPositions.push_back(glm::vec3(
+				randomRange(-areaWidth / 2.0f, areaWidth / 2.0f),
+				randomRange(30.0f, 50.0f), // Start above the ground
+				randomRange(-areaDepth / 2.0f, areaDepth / 2.0f)
+			));
+		}
+	
+
+		// Create quad for raindrop rendering
+		float quadVertices[] = {
+			-0.02f, 0.0f, 0.0f, 0.0f, 1.0f,
+			 0.02f, 0.0f, 0.0f, 1.0f, 1.0f,
+			-0.02f, -0.1f, 0.0f, 0.0f, 0.0f,
+			 0.02f, -0.1f, 0.0f, 1.0f, 0.0f
+		};
+
+		glGenVertexArrays(1, &VAO);
+		glGenBuffers(1, &VBO);
+		glGenBuffers(1, &instanceVBO);
+
+		glBindVertexArray(VAO);
+
+		glBindBuffer(GL_ARRAY_BUFFER, VBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
+
+		// Vertex positions
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(0);
+
+		// Texture coordinates
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+		glEnableVertexAttribArray(1);
+
+		// Instance data
+		glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+		glBufferData(GL_ARRAY_BUFFER, rainPositions.size() * sizeof(glm::vec3), rainPositions.data(), GL_DYNAMIC_DRAW);
+		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(2);
+		glVertexAttribDivisor(2, 1); // Tell OpenGL this is instanced data
+
+		glBindVertexArray(0);
+	}
+
+	~RainSystem() {
+		glDeleteVertexArrays(1, &VAO);
+		glDeleteBuffers(1, &VBO);
+		glDeleteBuffers(1, &instanceVBO);
+	}
+
+	void update(float deltaTime) {
+		for (auto& pos : rainPositions) {
+			pos.y -= rainSpeed * deltaTime; // Move downward
+
+			// Reset raindrop if it falls below ground level
+			if (pos.y < 0.0f) {
+				pos.y = randomRange(5.0f, 10.0f); // Reset to above the scene
+				pos.x = randomRange(-areaWidth / 2.0f, areaWidth / 2.0f);
+				pos.z = randomRange(-areaDepth / 2.0f, areaDepth / 2.0f);
+			}
+			//std::cout << pos.x << " " << pos.y << " " << pos.z << ";";
+		}//std::cout << std::endl;
+
+		// Update instance VBO with new positions
+		glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+		glBufferSubData(GL_ARRAY_BUFFER, 0, rainPositions.size() * sizeof(glm::vec3), rainPositions.data());
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	}
+
+	void render(GLfloat viewMatrix[], GLfloat projMatrix[], Shader* rainShader) {
+		rainShader->Use();
+		//glm::mat4 model = glm::mat4(1.0f);
+		//model = glm::mat4(1.0f);
+		//model = glm::translate(model, glm::vec3(-50, 0, 50));
+		//model = glm::scale(model, glm::vec3(1, 1, 1));
+		glUniformMatrix4fv(glGetUniformLocation(rainShader->Program, "viewMatrix"), 1, GL_FALSE, viewMatrix);
+		glUniformMatrix4fv(glGetUniformLocation(rainShader->Program, "projMatrix"), 1, GL_FALSE, projMatrix);
+		glUniform1f(glGetUniformLocation(rainShader->Program, "scaleFactor"), 5.0f); // Adjust scaleFactor
+		//glUniformMatrix4fv(glGetUniformLocation(rainShader->Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
+		glUniform1i(glGetUniformLocation(rainShader->Program, "rainTexture"), 0);
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, rainTexture);
+
+		glBindVertexArray(VAO);
+		glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, rainPositions.size());
+		glBindVertexArray(0);
+
+		glUseProgram(0);
+	}
+
+private:
+	float randomRange(float min, float max) {
+		return min + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (max - min)));
+	}
 };

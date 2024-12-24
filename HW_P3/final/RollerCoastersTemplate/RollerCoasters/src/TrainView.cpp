@@ -24,17 +24,11 @@
 
 *************************************************************************/
 
-#include <iostream>
 #include <Fl/fl.h>
 
 // we will need OpenGL, and OpenGL needs windows.h
 #include <windows.h>
 //#include "GL/gl.h"
-#include <glad/glad.h>
-#include <glm/glm.hpp>
-#include <glm/gtx/transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <GL/glu.h>
 
 #include "TrainView.H"
 #include "TrainWindow.H"
@@ -54,7 +48,6 @@
 #ifdef EXAMPLE_SOLUTION
 #	include "TrainExample/TrainExample.H"
 #endif
-
 
 //************************************************************************
 //
@@ -496,6 +489,15 @@ void TrainView::draw()
 		if (grass == -1) {
 			grass = TextureFromFile("/assets/images/grass-1024x1024.png", ".");
 		}
+
+		if (rainSystem == nullptr) {
+			rainTexture = TextureFromFile("/assets/images/rain.png", ".");
+			rainSystem = new RainSystem(100.0f, 100.0f, 300, 5.0f, rainTexture);
+			rainShader = new Shader(
+				"./assets/shaders/rain.vert",
+				nullptr, nullptr, nullptr,
+				"./assets/shaders/rain.frag");
+		}
 	}
 	else
 		throw std::runtime_error("Could not initialize GLAD!");
@@ -791,11 +793,13 @@ void TrainView::draw()
 	glUniform1i(glGetUniformLocation(rockShader->Program, "diffuseMap"), 2);
 
 	rock->Draw(*rockShader);
+
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(-90, 0, 50));
 	model = glm::scale(model, glm::vec3(15, 15, 15));
 	glUniformMatrix4fv(glGetUniformLocation(rockShader->Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
 	rock->Draw(*rockShader);
+
 	//draw skybox section start
 	glDisable(GL_CULL_FACE);
 	glDepthFunc(GL_LEQUAL);
@@ -812,7 +816,6 @@ void TrainView::draw()
 	//draw skybox section end
 	// ******************************************************************************************************************
 	//draw billboard tree start
-	
 	glm::vec3 treePos(70, 20, 0);     // Tree position
 	glm::vec3 up(0.0f, 1.0f, 0.0f);
 	glm::vec3 lookDir = glm::normalize(my_pos - treePos); // Calculate billboard orientation
@@ -847,16 +850,19 @@ void TrainView::draw()
 
 	
 
-	// Draw your scene
-	//drawObjects();
+	
+	
 
+	rainSystem->update(1.0f/30.0f);
+	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	rainSystem->render(view, projection, rainShader);
+	
 	//projector disable
 	glDisable(GL_TEXTURE_GEN_S);
 	glDisable(GL_TEXTURE_GEN_T);
 	glDisable(GL_TEXTURE_GEN_R);
 	glDisable(GL_TEXTURE_GEN_Q);
 	glDisable(GL_TEXTURE_2D);
-	
 
 	//frame buffer create different view section start
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);// now bind back to default framebuffer and draw a quad plane with the attached framebuffer color texture
@@ -1515,3 +1521,5 @@ doPick()
 //========================================================================
 //Functions ad by whitefox 
 //========================================================================
+
+
