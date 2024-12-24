@@ -154,4 +154,7 @@ class TrainView : public Fl_Gl_Window
 		GLuint rock_spec;
 		GLuint rock_normal;
 		Shader* rockShader = nullptr;
+
+		//grasstexture for floor
+        GLuint grass = -1;
 };

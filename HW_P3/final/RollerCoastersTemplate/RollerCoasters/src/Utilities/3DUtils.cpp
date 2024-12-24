@@ -31,15 +31,86 @@
 #include <math.h>
 
 #include <windows.h>
-#include <GL/gl.h>
-#include <FL/Fl.h>
-#include <GL/glu.h>
+
 
 #include "3DUtils.H"
 
 #include <vector>
+#include <stdlib.h>
 using std::vector;
+#define PERLIN_SIZE 256
+static int permutation[PERLIN_SIZE] = { 0 };
+static int initialized = 0;
+static float perlingScale = 0.01f;
+float gradient(int hash, float x, float y) {
+	int h = hash & 3; // Convert low 2 bits of hash code into 4 simple gradient directions
+	float u = h < 2 ? x : y;
+	float v = h < 2 ? y : x;
+	return ((h & 1) ? -u : u) + ((h & 2) ? -v : v);
+}
 
+// Fade function: smoothens interpolation
+float fade(float t) {
+	return t * t * t * (t * (t * 6 - 15) + 10);
+}
+
+// Linear interpolation function
+float lerp(float t, float a, float b) {
+	return a + t * (b - a);
+}
+
+// Initialize the permutation table (shuffle the numbers 0-255)
+void initializePerlin() {
+	for (int i = 0; i < PERLIN_SIZE; ++i) {
+		permutation[i] = i;
+	}
+	for (int i = PERLIN_SIZE - 1; i > 0; --i) {
+		int j = rand() % (i + 1);
+		int temp = permutation[i];
+		permutation[i] = permutation[j];
+		permutation[j] = temp;
+	}
+	initialized = 1;
+}
+
+// Perlin noise function
+float perlinNoise(float x, float y) {
+	if (!initialized) {
+		initializePerlin();
+	}
+
+	x = x*perlingScale;
+    y = y*perlingScale;
+
+	// Calculate the unit grid cell containing the point
+	int xi = (int)floorf(x) & (PERLIN_SIZE - 1);
+	int yi = (int)floorf(y) & (PERLIN_SIZE - 1);
+
+	// Calculate relative x and y inside the grid cell
+	float xf = x - floorf(x);
+	float yf = y - floorf(y);
+
+	// Compute fade curves for x and y
+	float u = fade(xf);
+	float v = fade(yf);
+
+	// Hash the corners of the square
+	int aa = permutation[(xi + permutation[yi & (PERLIN_SIZE - 1)]) & (PERLIN_SIZE - 1)];
+	int ab = permutation[(xi + permutation[(yi + 1) & (PERLIN_SIZE - 1)]) & (PERLIN_SIZE - 1)];
+	int ba = permutation[(xi + 1 + permutation[yi & (PERLIN_SIZE - 1)]) & (PERLIN_SIZE - 1)];
+	int bb = permutation[(xi + 1 + permutation[(yi + 1) & (PERLIN_SIZE - 1)]) & (PERLIN_SIZE - 1)];
+
+	// Calculate gradients
+	float g1 = gradient(aa, xf, yf);
+	float g2 = gradient(ba, xf - 1, yf);
+	float g3 = gradient(ab, xf, yf - 1);
+	float g4 = gradient(bb, xf - 1, yf - 1);
+
+	// Interpolate between the gradients
+	float x1 = lerp(u, g1, g2);
+	float x2 = lerp(u, g3, g4);
+	return lerp(v, x1, x2);
+}
 //*************************************************************************
 //
 // A utility function - draw a little cube at the origin (use a 
@@ -105,37 +176,60 @@ void drawCube(float x, float y, float z, float l)
 //*************************************************************************
 float floorColor1[3] = { .7f, .7f, .7f }; // Light color
 float floorColor2[3] = { .3f, .3f, .3f }; // Dark color
+float floorColor3[3] = {0.2f, 0.8f, 0.2f}; // grass green
 
 //*************************************************************************
 //
 // Draw the check board floor without texturing it
 //===============================================================================
-void drawFloor(float size, int nSquares)
+void drawFloor(float size, int nSquares, GLuint grassTextureID)
 //===============================================================================
 {
 	// parameters:
-	float maxX = size/2, maxY = size/2;
-	float minX = -size/2, minY = -size/2;
+	float maxX = size / 2, maxY = size / 2;
+	float minX = -size / 2, minY = -size / 2;
 
-	int x,y,v[3],i;
-	float xp,yp,xd,yd;
-	v[2] = 0;
-	xd = (maxX - minX) / ((float) nSquares);
-	yd = (maxY - minY) / ((float) nSquares);
+	int x, y, i;
+	float xp, yp, xd, yd;
+	xd = (maxX - minX) / ((float)nSquares);
+	yd = (maxY - minY) / ((float)nSquares);
+
+	// Bind the grass texture
+	if (grassTextureID != -1) {
+		glBindTexture(GL_TEXTURE_2D, grassTextureID);
+		glEnable(GL_TEXTURE_2D);
+	}
 	glBegin(GL_QUADS);
-	for(x=0,xp=minX; x<nSquares; x++,xp+=xd) {
-		for(y=0,yp=minY,i=x; y<nSquares; y++,i++,yp+=yd) {
-			glColor4fv(i%2==1 ? floorColor1:floorColor2);
-			glNormal3f(0, 1, 0); 
-			glVertex3d(xp,      0, yp);
-			glVertex3d(xp,      0, yp + yd);
-			glVertex3d(xp + xd, 0, yp + yd);
-			glVertex3d(xp + xd, 0, yp);
+	for (x = 0, xp = minX; x < nSquares; x++, xp += xd) {
+		for (y = 0, yp = minY, i = x; y < nSquares; y++, i++, yp += yd) {
+			// Calculate Perlin noise-based Y offset for bumps
+			float yOffset1 = 7 * perlinNoise(xp, yp);       // Top-left corner
+			float yOffset2 = 7 * perlinNoise(xp, yp + yd);  // Bottom-left corner
+			float yOffset3 = 7 * perlinNoise(xp + xd, yp + yd); // Bottom-right corner
+			float yOffset4 = 7 * perlinNoise(xp + xd, yp);  // Top-right corner
+			//float yOffset1 = 0;       // Top-left corner
+			//float yOffset2 = 0;  // Bottom-left corner
+			//float yOffset3 = 0; // Bottom-right corner
+			//float yOffset4 = 0;  // Top-right corner
 
-		} // end of for j
-	}// end of for i
+			//glColor4fv(i % 2 == 1 ? floorColor1 : floorColor2); // Alternating colors for grid
+			glColor4fv(floorColor3);
+			glNormal3f(0, 1, 0);
+
+			// Assign texture coordinates (u, v) and vertex positions
+			glTexCoord2f(0.0f, 0.0f); glVertex3f(xp, yOffset1, yp);
+			glTexCoord2f(0.0f, 1.0f); glVertex3f(xp, yOffset2, yp + yd);
+			glTexCoord2f(1.0f, 1.0f); glVertex3f(xp + xd, yOffset3, yp + yd);
+			glTexCoord2f(1.0f, 0.0f); glVertex3f(xp + xd, yOffset4, yp);
+		}
+	}
 	glEnd();
+
+	// Unbind the texture
+	glDisable(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, 0);
 }
+
 
 //*************************************************************************
 //
@@ -389,3 +483,32 @@ void restoreLighting()
 
 	}
 }
+
+/* deprecated
+void drawFloor(float size, int nSquares)
+//===============================================================================
+{
+	// parameters:
+	float maxX = size/2, maxY = size/2;
+	float minX = -size/2, minY = -size/2;
+
+	int x,y,v[3],i;
+	float xp,yp,xd,yd;
+	v[2] = 0;
+	xd = (maxX - minX) / ((float) nSquares);
+	yd = (maxY - minY) / ((float) nSquares);
+	glBegin(GL_QUADS);
+	for(x=0,xp=minX; x<nSquares; x++,xp+=xd) {
+		for(y=0,yp=minY,i=x; y<nSquares; y++,i++,yp+=yd) {
+			glColor4fv(i%2==1 ? floorColor1:floorColor2);
+			glNormal3f(0, 1, 0);
+			glVertex3d(xp,      0, yp);
+			glVertex3d(xp,      0, yp + yd);
+			glVertex3d(xp + xd, 0, yp + yd);
+			glVertex3d(xp + xd, 0, yp);
+
+		} // end of for j
+	}// end of for i
+	glEnd();
+}
+*/

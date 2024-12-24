@@ -492,6 +492,10 @@ void TrainView::draw()
 					nullptr, nullptr, nullptr,
 					"./assets/shaders/rock.frag");
 		}
+
+		if (grass == -1) {
+			grass = TextureFromFile("/assets/images/grass-1024x1024.png", ".");
+		}
 	}
 	else
 		throw std::runtime_error("Could not initialize GLAD!");
@@ -630,33 +634,6 @@ void TrainView::draw()
 		glLightfv(GL_LIGHT2, GL_POSITION, lightPosition3);
 		glLightfv(GL_LIGHT2, GL_DIFFUSE, blueLight);
 	}
-	/*
-	current_trans = glm::make_mat4(projection) * glm::make_mat4(view);
-
-	if (frame < 8) {
-		if (frame % 8 != 0) {
-			trans[frame % 8] = trans[frame % 8 - 1];
-		}
-		else {
-			trans[0] = current_trans;
-		}
-	}
-	else {
-
-		trans[7] = trans[6];
-		trans[6] = trans[5];
-		trans[5] = trans[4];
-		trans[4] = trans[3];
-		trans[3] = trans[2];
-		trans[2] = trans[1];
-		trans[1] = trans[0];
-		trans[0] = current_trans;
-	}
-	frame++;
-	for (int i = 0; i < 8; i++) {
-		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer[i]);
-		draw_scene_model(rocket, true, fbo_shader, trans[i], current_trans);
-	}*/
 
 	//view and projection matrix setup
 	GLfloat projection[16];
@@ -704,7 +681,7 @@ void TrainView::draw()
 
 	setupFloor();
 	//glDisable(GL_LIGHTING);
-	drawFloor(500,10);
+	drawFloor(500, 50, grass);
 
 
 	//*********************************************************************
@@ -797,26 +774,28 @@ void TrainView::draw()
 		glUniform3fv(glGetUniformLocation(rockShader->Program, "lightPos"), 1, lightPosition);
 	}
 	else if (tw->dirlight->value()) {
-		glUniform3fv(glGetUniformLocation(rockShader->Program, "lightPos"), 1, glm::value_ptr(glm::vec3(-50, 100, 50)));
+		glUniform3fv(glGetUniformLocation(rockShader->Program, "lightPos"), 1, glm::value_ptr(glm::vec3(0, 1000, 0)));
 	}
 	else {
-		glUniform3fv(glGetUniformLocation(rockShader->Program, "lightPos"), 1, glm::value_ptr(glm::vec3(-50, 100, 50)));
+		glUniform3fv(glGetUniformLocation(rockShader->Program, "lightPos"), 1, glm::value_ptr(glm::vec3(0, 1000, 0)));
 	}
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, rock_spec);
 	glUniform1i(glGetUniformLocation(rockShader->Program, "specularMap"), 0);
-
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, rock_normal);
 	glUniform1i(glGetUniformLocation(rockShader->Program, "normalMap"), 1);
-
 	glActiveTexture(GL_TEXTURE2);
 	glBindTexture(GL_TEXTURE_2D, rock_diff);
 	glUniform1i(glGetUniformLocation(rockShader->Program, "diffuseMap"), 2);
 
 	rock->Draw(*rockShader);
-
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(-90, 0, 50));
+	model = glm::scale(model, glm::vec3(15, 15, 15));
+	glUniformMatrix4fv(glGetUniformLocation(rockShader->Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
+	rock->Draw(*rockShader);
 	//draw skybox section start
 	glDisable(GL_CULL_FACE);
 	glDepthFunc(GL_LEQUAL);

@@ -27,7 +27,9 @@
 
 *************************************************************************/
 #pragma once
-
+#include <GL/gl.h>
+#include <FL/Fl.h>
+#include <GL/glu.h>
 //************************************************************************
 // this typedef is useful for lots of stuff
 // - this hardly takes the place of a real matrix class, but it does make some
@@ -56,7 +58,7 @@ extern float floorColor2[3];
 //       one size). the numSquares is the number of squares in each
 //       across an edge
 //************************************************************************
-void drawFloor(float size = 10, int nSquares = 8);
+void drawFloor(float size = 10, int nSquares = 8, GLuint textureid = -1);
 
 //************************************************************************
 // handy utility for turning lights on and off - it remembers what the

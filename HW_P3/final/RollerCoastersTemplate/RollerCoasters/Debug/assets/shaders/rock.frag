@@ -17,6 +17,7 @@ uniform sampler2D normalMap;     // Normal map
 uniform vec3 lightPos;           // Light position in world space
 uniform vec3 viewPos;            // Camera position in world space
 
+
 const float Ka = 0.2;
 const float Kd = 0.7;
 const float Ks = 0.5;
