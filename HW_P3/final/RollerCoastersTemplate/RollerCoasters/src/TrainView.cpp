@@ -49,6 +49,7 @@
 #	include "TrainExample/TrainExample.H"
 #endif
 
+
 //************************************************************************
 //
 // * Constructor to set up the GL window
@@ -239,6 +240,27 @@ void TrainView::set_fbo(int* framebuffer, unsigned int* textureColorbuffer) {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 }
+
+glm::mat4 TrainView::getTransformMatrix(glm::mat4 mat, glm::vec3 pos, glm::vec3 scale, glm::vec3 rotate, float rotate_angle) {
+	mat = glm::mat4(1.0f);
+	mat = glm::translate(mat, pos);
+	mat = glm::scale(mat, scale);
+	mat = glm::rotate(mat, glm::radians(rotate_angle), rotate);
+	return mat;
+}
+
+void TrainView::drawModel(Model* model, Shader* shader, int tex_index, GLfloat projection[16], GLfloat view[16], glm::mat4 mat) {
+	shader->Use();
+	glActiveTexture(GL_TEXTURE0); // active proper texture unit before binding
+	glUniformMatrix4fv(glGetUniformLocation(shader->Program, "projection"), 1, GL_FALSE, projection);
+	glUniformMatrix4fv(glGetUniformLocation(shader->Program, "view"), 1, GL_FALSE, view);
+	glUniformMatrix4fv(glGetUniformLocation(shader->Program, "model"), 1, GL_FALSE, glm::value_ptr(mat));
+	glUniform1i(glGetUniformLocation(shader->Program, "texture1"), 0);
+	glBindTexture(GL_TEXTURE_2D, tex_index);
+	model->Draw(*shader);
+	glActiveTexture(GL_TEXTURE0);
+}
+
 //************************************************************************
 //
 // * this is the code that actually draws the window
@@ -595,13 +617,16 @@ void TrainView::draw()
 	if (tw->pointlight->value()) {
 		float yellowAmbient[] = { 0.8f, 0.8f, 0.5f, 1.0f };
 		float yellowAmbientDiffuse[] = { 0.0f, 0.0f, 1.0f, 1.0f };
-		lightPosition[0] = -2.0f; lightPosition[1] = 2.0f; lightPosition[2] = -5.0f; lightPosition[3] = 1.0f;
+		float PI = 3.1415926f;
+		float angle = tw->lightpos->value() * 2.0f * PI;
+		lightPosition[0] = 150.0f * cos(angle); lightPosition[1] = 5.0f; lightPosition[2] = 150.0f * sin(angle); lightPosition[3] = 1.0f;
 		//lightPosition = { -2.0f, 2.0f, -5.0f, 1.0f };
 		
 		glLightfv(GL_LIGHT1, GL_AMBIENT, yellowAmbient);
 		glLightfv(GL_LIGHT1, GL_DIFFUSE, yellowAmbientDiffuse);
-		glLightf(GL_LIGHT1, GL_LINEAR_ATTENUATION, 0.05f);
+		//glLightf(GL_LIGHT1, GL_LINEAR_ATTENUATION, 0.05f);
 		glLightfv(GL_LIGHT1, GL_POSITION, lightPosition);
+
 	}
 	else {
 		glDisable(GL_LIGHT1);
@@ -683,7 +708,7 @@ void TrainView::draw()
 
 	setupFloor();
 	//glDisable(GL_LIGHTING);
-	drawFloor(500, 50, grass);
+	drawFloor(500, 50, grass, tw->floornoise->value());
 
 
 	//*********************************************************************
@@ -701,67 +726,17 @@ void TrainView::draw()
 		drawStuff(true);
 		unsetupShadows();
 	}
-
-	//draw terrain
-	/*
-	for_model_texture->Use();
-	glActiveTexture(GL_TEXTURE0); // active proper texture unit before binding
-	glUniformMatrix4fv(glGetUniformLocation(for_model_texture->Program, "projection"), 1, GL_FALSE, projection);
-	glUniformMatrix4fv(glGetUniformLocation(for_model_texture->Program, "view"), 1, GL_FALSE, view);
-	glUniformMatrix4fv(glGetUniformLocation(for_model_texture->Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
-	glUniform1i(glGetUniformLocation(for_model_texture->Program, "texture1"), 0);
-	glBindTexture(GL_TEXTURE_2D, terrain_tex);
-	terrain->Draw(*for_model_texture);
-	glActiveTexture(GL_TEXTURE0);
-	*/
-
-	//draw shark
-	/*
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(0, 50, 0));
-	model = glm::scale(model, glm::vec3(1, 1, 1));
-	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0, 1.0, 0.0));
-	glUniformMatrix4fv(glGetUniformLocation(for_model->Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
-	shark->Draw(*for_model);
-	*/
 	
 	//draw tree model
-	/*
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(0, 0, 0));
-	model = glm::scale(model, glm::vec3(2, 2, 2));
-	for_model_texture->Use();
-	glActiveTexture(GL_TEXTURE0); // active proper texture unit before binding
-	glUniformMatrix4fv(glGetUniformLocation(for_model_texture->Program, "projection"), 1, GL_FALSE, projection);
-	glUniformMatrix4fv(glGetUniformLocation(for_model_texture->Program, "view"), 1, GL_FALSE, view);
-	glUniformMatrix4fv(glGetUniformLocation(for_model_texture->Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
-	glUniform1i(glGetUniformLocation(for_model_texture->Program, "texture1"), 0);
-	glBindTexture(GL_TEXTURE_2D, tree_tex);
-	tree->Draw(*for_model_texture);
-	glActiveTexture(GL_TEXTURE0);
-	*/
+	model = getTransformMatrix(model, glm::vec3(0, 0, 0), glm::vec3(2, 2, 2), glm::vec3(0, 1, 0), 0);
+	drawModel(tree, for_model_texture, tree_tex, projection, view, model);
 
 	//draw flower model
-	/*
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(-15, 0, 0));
-	model = glm::scale(model, glm::vec3(5, 5, 5));
-	for_model_texture->Use();
-	glActiveTexture(GL_TEXTURE0); // active proper texture unit before binding
-	glUniformMatrix4fv(glGetUniformLocation(for_model_texture->Program, "projection"), 1, GL_FALSE, projection);
-	glUniformMatrix4fv(glGetUniformLocation(for_model_texture->Program, "view"), 1, GL_FALSE, view);
-	glUniformMatrix4fv(glGetUniformLocation(for_model_texture->Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
-	glUniform1i(glGetUniformLocation(for_model_texture->Program, "texture1"), 0);
-	glBindTexture(GL_TEXTURE_2D, tree_tex);
-	flower->Draw(*for_model_texture);
-	glActiveTexture(GL_TEXTURE0);
-	*/
+	model = getTransformMatrix(model, glm::vec3(-15, 0, 0), glm::vec3(5, 5, 5), glm::vec3(0, 1, 0), 0);
+	drawModel(flower, for_model_texture, tree_tex, projection, view, model);
 
 	//draw rock model
-	
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(-50,  0, 50));
-	model = glm::scale(model, glm::vec3(15, 15, 15));
+	model = getTransformMatrix(model, glm::vec3(-50, 0, 50), glm::vec3(15, 15, 15), glm::vec3(0, 1, 0), 0);
 	rockShader->Use();
 
 	glUniformMatrix4fv(glGetUniformLocation(rockShader->Program, "projection"), 1, GL_FALSE, projection);
@@ -793,10 +768,7 @@ void TrainView::draw()
 	glUniform1i(glGetUniformLocation(rockShader->Program, "diffuseMap"), 2);
 
 	rock->Draw(*rockShader);
-
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(-90, 0, 50));
-	model = glm::scale(model, glm::vec3(15, 15, 15));
+	model = getTransformMatrix(model, glm::vec3(-90, 0, 50), glm::vec3(15, 15, 15), glm::vec3(0, 1, 0), 0);
 	glUniformMatrix4fv(glGetUniformLocation(rockShader->Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
 	rock->Draw(*rockShader);
 
@@ -816,7 +788,7 @@ void TrainView::draw()
 	//draw skybox section end
 	// ******************************************************************************************************************
 	//draw billboard tree start
-	glm::vec3 treePos(70, 20, 0);     // Tree position
+	glm::vec3 treePos(100, 20, 0);     // Tree position
 	glm::vec3 up(0.0f, 1.0f, 0.0f);
 	glm::vec3 lookDir = glm::normalize(my_pos - treePos); // Calculate billboard orientation
 	glm::vec3 right = glm::normalize(glm::cross(up, lookDir));
@@ -848,15 +820,10 @@ void TrainView::draw()
 	//draw billboard tree end
 	// ******************************************************************************************************************
 
-	
-
-	
-	
-
-	rainSystem->update(1.0f/30.0f);
+	rainSystem->update(1.0f / 30.0f);
 	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	rainSystem->render(view, projection, rainShader);
-	
+
 	//projector disable
 	glDisable(GL_TEXTURE_GEN_S);
 	glDisable(GL_TEXTURE_GEN_T);
@@ -1137,8 +1104,10 @@ void TrainView::drawTrack(TrainView*, bool doingShadows)
 					sleepercount++;
 					if (sleepercount % 5 == 0 && tw->support->value()) {
 						if (!doingShadows) glColor3ub(255, 100, 150);
-						drawWheel(qt0 + cross_t, Pnt3f(1, 0, 0), Pnt3f(0, -1, 0), Pnt3f(0, 0, 1), 0.5f, qt0.y);
-						drawWheel(qt0 + cross_t * (-1), Pnt3f(1, 0, 0), Pnt3f(0, -1, 0), Pnt3f(0, 0, 1), 0.5f, qt0.y);
+						drawWheel(qt0 + cross_t, Pnt3f(1, 0, 0), Pnt3f(0, -1, 0), Pnt3f(0, 0, 1), 0.5f, 
+							qt0.y - getFloorHeight(qt0.x + cross_t.x, qt0.z + cross_t.z, tw->floornoise->value()));
+						drawWheel(qt0 + cross_t * (-1), Pnt3f(1, 0, 0), Pnt3f(0, -1, 0), Pnt3f(0, 0, 1), 0.5f, 
+							qt0.y - getFloorHeight(qt0.x + cross_t.x, qt0.z + cross_t.z, tw->floornoise->value()));
 					}
 				}
 			}
@@ -1154,8 +1123,10 @@ void TrainView::drawTrack(TrainView*, bool doingShadows)
 				}
 				if (j % 50 == 2 && tw->support->value()) {
 					if (!doingShadows) glColor3ub(255, 100, 150);
-					drawWheel(qt0 + cross_t, Pnt3f(1, 0, 0), Pnt3f(0, -1, 0), Pnt3f(0, 0, 1), 0.5f, qt0.y);
-					drawWheel(qt0 + cross_t * (-1), Pnt3f(1, 0, 0), Pnt3f(0, -1, 0), Pnt3f(0, 0, 1), 0.5f, qt0.y);
+					drawWheel(qt0 + cross_t, Pnt3f(1, 0, 0), Pnt3f(0, -1, 0), Pnt3f(0, 0, 1), 0.5f, 
+						qt0.y - getFloorHeight(qt0.x + cross_t.x, qt0.z + cross_t.z, tw->floornoise->value()));
+					drawWheel(qt0 + cross_t * (-1), Pnt3f(1, 0, 0), Pnt3f(0, -1, 0), Pnt3f(0, 0, 1), 0.5f, 
+						qt0.y - getFloorHeight(qt0.x + cross_t.x, qt0.z + cross_t.z, tw->floornoise->value()));
 				}
 			}
 			if (!calctrainpos && arclength > t_arclength && isarclen) {
@@ -1359,16 +1330,7 @@ void TrainView::drawTrain(TrainView*, bool doingShadows)
 	glm::mat4 model = glm::mat4(1.0f);
 	model = glm::scale(model, glm::vec3(4, 4, 4));
 
-	for_model_texture->Use();
-	glActiveTexture(GL_TEXTURE0); // active proper texture unit before binding
-	glUniformMatrix4fv(glGetUniformLocation(for_model_texture->Program, "projection"), 1, GL_FALSE, projection);
-	glUniformMatrix4fv(glGetUniformLocation(for_model_texture->Program, "view"), 1, GL_FALSE, glm::value_ptr(view));
-	glUniformMatrix4fv(glGetUniformLocation(for_model_texture->Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
-	glUniform1i(glGetUniformLocation(for_model_texture->Program, "texture1"), 0);
-	glBindTexture(GL_TEXTURE_2D, capybara_tex);
-	capybara->Draw(*for_model_texture);
-	glActiveTexture(GL_TEXTURE0);
-
+	drawModel(capybara, for_model_texture, capybara_tex, projection, glm::value_ptr(view), model);
 	glUseProgram(0);
 
 	// smoke
@@ -1521,5 +1483,3 @@ doPick()
 //========================================================================
 //Functions ad by whitefox 
 //========================================================================
-
-

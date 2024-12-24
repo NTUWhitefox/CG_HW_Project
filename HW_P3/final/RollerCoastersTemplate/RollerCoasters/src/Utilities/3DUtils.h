@@ -58,7 +58,9 @@ extern float floorColor2[3];
 //       one size). the numSquares is the number of squares in each
 //       across an edge
 //************************************************************************
-void drawFloor(float size = 10, int nSquares = 8, GLuint textureid = -1);
+float getFloorHeight(float x, float z, float noise);
+
+void drawFloor(float size = 10, int nSquares = 8, GLuint textureid = -1, float noise = 7);
 
 //************************************************************************
 // handy utility for turning lights on and off - it remembers what the

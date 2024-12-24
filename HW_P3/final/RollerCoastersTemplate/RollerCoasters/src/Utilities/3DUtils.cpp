@@ -178,11 +178,15 @@ float floorColor1[3] = { .7f, .7f, .7f }; // Light color
 float floorColor2[3] = { .3f, .3f, .3f }; // Dark color
 float floorColor3[3] = {0.2f, 0.8f, 0.2f}; // grass green
 
+float getFloorHeight(float x, float z, float noise) {
+	return noise * perlinNoise(x, z);
+}
+
 //*************************************************************************
 //
 // Draw the check board floor without texturing it
 //===============================================================================
-void drawFloor(float size, int nSquares, GLuint grassTextureID)
+void drawFloor(float size, int nSquares, GLuint grassTextureID, float noise)
 //===============================================================================
 {
 	// parameters:
@@ -203,10 +207,10 @@ void drawFloor(float size, int nSquares, GLuint grassTextureID)
 	for (x = 0, xp = minX; x < nSquares; x++, xp += xd) {
 		for (y = 0, yp = minY, i = x; y < nSquares; y++, i++, yp += yd) {
 			// Calculate Perlin noise-based Y offset for bumps
-			float yOffset1 = 7 * perlinNoise(xp, yp);       // Top-left corner
-			float yOffset2 = 7 * perlinNoise(xp, yp + yd);  // Bottom-left corner
-			float yOffset3 = 7 * perlinNoise(xp + xd, yp + yd); // Bottom-right corner
-			float yOffset4 = 7 * perlinNoise(xp + xd, yp);  // Top-right corner
+			float yOffset1 = noise * perlinNoise(xp, yp);       // Top-left corner
+			float yOffset2 = noise * perlinNoise(xp, yp + yd);  // Bottom-left corner
+			float yOffset3 = noise * perlinNoise(xp + xd, yp + yd); // Bottom-right corner
+			float yOffset4 = noise * perlinNoise(xp + xd, yp);  // Top-right corner
 			//float yOffset1 = 0;       // Top-left corner
 			//float yOffset2 = 0;  // Bottom-left corner
 			//float yOffset3 = 0; // Bottom-right corner

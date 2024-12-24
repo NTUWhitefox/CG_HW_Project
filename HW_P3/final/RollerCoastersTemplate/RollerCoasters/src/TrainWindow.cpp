@@ -112,7 +112,7 @@ TrainWindow(const int x, const int y)
 		splineBrowser->add("Cubic B-Spline");
 		splineBrowser->select(2);
 
-		pty += 110;
+		pty += 95;
 
 		// add and delete points
 		Fl_Button* ap = new Fl_Button(605,pty,80,20,"Add Point");
@@ -149,9 +149,27 @@ TrainWindow(const int x, const int y)
 
 		pty += 30;
 
+		lightpos = new Fl_Value_Slider(655,pty,140,20,"light pos");
+		lightpos->range(0, 1);
+		lightpos->value(0);
+		lightpos->align(FL_ALIGN_LEFT);
+		lightpos->type(FL_HORIZONTAL);
+		lightpos->callback((Fl_Callback*)damageCB, this);
+
+		pty += 30;
+
+		floornoise = new Fl_Value_Slider(655,pty,140,20,"noise");
+		floornoise->range(0, 100);
+		floornoise->value(7);
+		floornoise->align(FL_ALIGN_LEFT);
+		floornoise->type(FL_HORIZONTAL);
+		floornoise->callback((Fl_Callback*)damageCB, this);
+
+		pty += 30;
+
 		physics = new Fl_Button(605,pty,60,20,"Physics");
 		togglify(physics);
-		projector = new Fl_Button(670, pty, 60, 20, "Projector");
+		projector = new Fl_Button(670,pty,60,20,"Projector");
 		togglify(projector);
 
 		pty += 30;
@@ -165,7 +183,7 @@ TrainWindow(const int x, const int y)
 
 		pty += 30;
 
-		framebuffer = new Fl_Browser(605,pty,190,180,"Frame Buffer Type");
+		framebuffer = new Fl_Browser(605,pty,190,165,"Frame Buffer Type");
 		framebuffer->type(2);		// select
 		framebuffer->callback((Fl_Callback*)damageCB, this);
 		framebuffer->add("default");

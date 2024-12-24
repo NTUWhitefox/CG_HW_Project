@@ -93,6 +93,8 @@ class TrainWindow : public Fl_Double_Window {
 
 		Fl_Button*			dirlight;
 		Fl_Button*			pointlight;
+		Fl_Value_Slider*	lightpos;
+		Fl_Value_Slider*	floornoise;
 		Fl_Button*			physics;
 		Fl_Button*			support;
 		Fl_Button*			headlight;

@@ -83,6 +83,13 @@ class TrainView : public Fl_Gl_Window
 		// all of the actual drawing happens in this routine
 		// it has to be encapsulated, since we draw differently if
 		// we're drawing shadows (no colors, for example)
+
+		void set_fbo(int* framebuffer, unsigned int* textureColorbuffer);
+
+		glm::mat4 getTransformMatrix(glm::mat4 mat, glm::vec3 pos, glm::vec3 scale, glm::vec3 rotate, float rotate_angle);
+
+		void drawModel(Model* model, Shader* shader, int tex_index, GLfloat projection[16], GLfloat view[16], glm::mat4 mat);
+
 		void drawStuff(bool doingShadows=false);
 
 		Pnt3f drawCurve(Pnt3f p0, Pnt3f p1, Pnt3f p2, Pnt3f p3, float t, int line_type);
@@ -94,8 +101,6 @@ class TrainView : public Fl_Gl_Window
 		void drawTrain(TrainView*, bool doingShadows);
 
 		void drawWheel(Pnt3f qt, Pnt3f forward, Pnt3f cross, Pnt3f up, float r, float w);
-
-		void set_fbo(int* framebuffer, unsigned int* textureColorbuffer);
 
 		// setup the projection - assuming that the projection stack has been
 		// cleared for you
@@ -198,7 +203,7 @@ public:
 				randomRange(-areaDepth / 2.0f, areaDepth / 2.0f)
 			));
 		}
-	
+
 
 		// Create quad for raindrop rendering
 		float quadVertices[] = {
