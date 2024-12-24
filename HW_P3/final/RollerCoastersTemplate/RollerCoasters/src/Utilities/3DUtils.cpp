@@ -211,10 +211,6 @@ void drawFloor(float size, int nSquares, GLuint grassTextureID, float noise)
 			float yOffset2 = noise * perlinNoise(xp, yp + yd);  // Bottom-left corner
 			float yOffset3 = noise * perlinNoise(xp + xd, yp + yd); // Bottom-right corner
 			float yOffset4 = noise * perlinNoise(xp + xd, yp);  // Top-right corner
-			//float yOffset1 = 0;       // Top-left corner
-			//float yOffset2 = 0;  // Bottom-left corner
-			//float yOffset3 = 0; // Bottom-right corner
-			//float yOffset4 = 0;  // Top-right corner
 
 			//glColor4fv(i % 2 == 1 ? floorColor1 : floorColor2); // Alternating colors for grid
 			glColor4fv(floorColor3);

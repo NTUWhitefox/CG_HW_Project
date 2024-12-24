@@ -84,16 +84,21 @@ class TrainWindow : public Fl_Double_Window {
 		// the type of the spline (use its value to determine)
 		Fl_Browser*			splineBrowser;
 		Fl_Browser*			framebuffer;
-
+		Fl_Browser*         centerObject;
 		// are we animating the train?
 		Fl_Button*			runButton;
 		// if we're animating it, how fast should it go?
 		Fl_Value_Slider*	speed;
 		Fl_Button*			arcLength;		// do we use arc length for speed?
 
-		Fl_Button*			dirlight;
+		//Fl_Button*			dirlight;
 		Fl_Button*			pointlight;
-		Fl_Value_Slider*	lightpos;
+		Fl_Value_Slider*	lightangle;
+		Fl_Value_Slider*    lightradius;
+		Fl_Value_Slider*    brightness;
+		Fl_Value_Slider*    lightR;
+		Fl_Value_Slider*	lightG;
+		Fl_Value_Slider*	lightB;
 		Fl_Value_Slider*	floornoise;
 		Fl_Button*			physics;
 		Fl_Button*			support;

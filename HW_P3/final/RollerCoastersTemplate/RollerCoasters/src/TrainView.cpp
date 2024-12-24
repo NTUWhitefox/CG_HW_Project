@@ -209,19 +209,7 @@ unsigned int loadCubemap(vector<const GLchar*> faces)
 
 	return textureID;
 }
-std::array<float, 16> perspectiveMatrix(float fov, float aspect, float nearPlane, float farPlane) {
-	float f = 1.0f / std::tan(fov * 0.5f * M_PI / 180.0f); // Convert FOV to radians and calculate cotangent
-	float nf = 1.0f / (nearPlane - farPlane);
 
-	std::array<float, 16> matrix = {
-		f / aspect, 0.0f,  0.0f,                               0.0f,
-		0.0f,       f,     0.0f,                               0.0f,
-		0.0f,       0.0f,  (farPlane + nearPlane) * nf,       -1.0f,
-		0.0f,       0.0f,  (2.0f * farPlane * nearPlane) * nf, 0.0f
-	};
-
-	return matrix;
-}
 void TrainView::set_fbo(int* framebuffer, unsigned int* textureColorbuffer) {
 
 	glGenFramebuffers(1, (GLuint*)framebuffer);
@@ -249,6 +237,19 @@ glm::mat4 TrainView::getTransformMatrix(glm::mat4 mat, glm::vec3 pos, glm::vec3 
 	return mat;
 }
 
+glm::mat4 billBoardModel(glm::vec3 objectPos, glm::vec3 cameraPos, glm::vec3 cameraUp) {
+	//glm::vec3 treePos(200, 20, -200);     // Tree position(200,20,200)
+	//glm::vec3 up(0.0f, 1.0f, 0.0f);
+	glm::vec3 lookDir = glm::normalize(cameraPos - objectPos); // Calculate billboard orientation
+	glm::vec3 right = glm::normalize(glm::cross(cameraUp, lookDir));
+	glm::vec3 newUp = glm::cross(lookDir, right);
+	glm::mat4 model = glm::mat4(1.0f);
+	model = glm::translate(model, objectPos);
+	model[0] = glm::vec4(right, 0.0f);
+	model[1] = glm::vec4(newUp, 0.0f);
+	model[2] = glm::vec4(lookDir, 0.0f);
+    return model;
+}
 void TrainView::drawModel(Model* model, Shader* shader, int tex_index, GLfloat projection[16], GLfloat view[16], glm::mat4 mat) {
 	shader->Use();
 	glActiveTexture(GL_TEXTURE0); // active proper texture unit before binding
@@ -257,8 +258,83 @@ void TrainView::drawModel(Model* model, Shader* shader, int tex_index, GLfloat p
 	glUniformMatrix4fv(glGetUniformLocation(shader->Program, "model"), 1, GL_FALSE, glm::value_ptr(mat));
 	glUniform1i(glGetUniformLocation(shader->Program, "texture1"), 0);
 	glBindTexture(GL_TEXTURE_2D, tex_index);
-	model->Draw(*shader);
 	glActiveTexture(GL_TEXTURE0);
+	model->Draw(*shader);
+	glUseProgram(0);
+}
+
+void drawTreeRecursive(TrainView* tw, float curLength, int branchNum, float downScaleFactor, glm::vec3 curPos, glm::vec3 curScale, glm::vec3 curRotation, int seed) {
+	if (branchNum <= 0 || curLength <= 0) return; // Base case for recursion
+
+	// Create the model matrix
+	glm::mat4 model = glm::mat4(1.0f);
+	model = glm::translate(model, curPos);                         // Translate to current position
+	model = glm::rotate(model, glm::radians(curRotation.x), glm::vec3(1.0f, 0.0f, 0.0f)); // Rotate around X
+	model = glm::rotate(model, glm::radians(curRotation.y), glm::vec3(0.0f, 1.0f, 0.0f)); // Rotate around Y
+	model = glm::rotate(model, glm::radians(curRotation.z), glm::vec3(0.0f, 0.0f, 1.0f)); // Rotate around Z
+	model = glm::scale(model, curScale);                          // Scale the cylinder
+
+	// Pass the model matrix to the shader
+	glUniformMatrix4fv(glGetUniformLocation(tw->trunkShader->Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
+
+	// Draw the current cylinder
+	tw->trunkCylinder->Draw(*tw->trunkShader);
+
+	// Calculate the new position (tip of the current cylinder)
+	glm::vec3 direction = glm::vec3(0.0f, curLength, 0.0f); // Cylinder extends along the Y-axis
+	glm::mat4 rotationMatrix = glm::mat4(1.0f);
+	rotationMatrix = glm::rotate(rotationMatrix, glm::radians(curRotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+	rotationMatrix = glm::rotate(rotationMatrix, glm::radians(curRotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+	rotationMatrix = glm::rotate(rotationMatrix, glm::radians(curRotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+	glm::vec3 rotatedDirection = glm::vec3(rotationMatrix * glm::vec4(direction, 1.0f));
+	glm::vec3 newPos = curPos + rotatedDirection;
+
+	// Update scale and length for the new branches
+	curLength *= downScaleFactor;
+	glm::vec3 newScale = curScale * downScaleFactor;
+
+	// Generate new branches
+	int numBranches = 3; // You can modify this for more branches
+	//radom between 30~50;
+	srand(seed++);
+	float zAngle = rand() % 21 + 30;
+	float yAxisStep = 360.0f / numBranches;
+
+	for (int i = 0; i < numBranches; ++i) {
+		srand(seed++);
+		glm::vec3 newRotation = curRotation;
+		// first incline along z axis
+		newRotation.z += -zAngle / (numBranches - 1);
+        // then rotate along y axis
+		newRotation.y += (yAxisStep * i) + rand() % 21 - 10;//plus a random between -10~10
+
+		// Recursive call for each branch
+		drawTreeRecursive(tw, curLength, branchNum - 1, downScaleFactor, newPos, newScale, newRotation, seed);
+	}
+}
+
+void drawTree(TrainView* tw, int branchNum, GLfloat projection[16], GLfloat view[16], glm::vec3 my_pos, float lightPosition[4], float lightColor[3], int seed) {
+	tw->trunkShader->Use();
+	glUniformMatrix4fv(glGetUniformLocation(tw->trunkShader->Program, "projection"), 1, GL_FALSE, projection);
+	glUniformMatrix4fv(glGetUniformLocation(tw->trunkShader->Program, "view"), 1, GL_FALSE, view);
+	glUniformMatrix4fv(glGetUniformLocation(tw->trunkShader->Program, "cameraPos"), 1, GL_FALSE, glm::value_ptr(my_pos));
+	glUniform3fv(glGetUniformLocation(tw->trunkShader->Program, "lightPos"), 1, lightPosition);
+	glUniform3f(glGetUniformLocation(tw->trunkShader->Program, "lightColor"), lightColor[0], lightColor[1], lightColor[2]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, tw->trunk_color);
+	glUniform1i(glGetUniformLocation(tw->trunkShader->Program, "albedoMap"), 0);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, tw->trunk_height);
+	glUniform1i(glGetUniformLocation(tw->trunkShader->Program, "heightMap"), 1);
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, tw->trunk_normal);
+	glUniform1i(glGetUniformLocation(tw->trunkShader->Program, "normalMap"), 2);
+	glm::vec3 curPos = glm::vec3(0.0f, 0.0f, 0.0f); // Initial position of
+    glm::vec3 curRotation = glm::vec3(0.0f, 0.0f, 0.0f); // Initial	rotation of the trunk
+    glm::vec3 curScale = glm::vec3(3.0f, 6.0f, 3.0f); //
+	drawTreeRecursive(tw, 18.0f, branchNum, 0.8f, curPos, curScale, curRotation, seed);
 }
 
 //************************************************************************
@@ -293,15 +369,12 @@ void TrainView::draw()
 					nullptr, nullptr, nullptr,
 					"./assets/shaders/model_texture.frag");
 		}
-
 		if (!tree) {
 			tree = new Model("./assets/objects/tree.obj");
 		}
-
 		if (!flower) {
 			flower = new Model("./assets/objects/flower.obj");
 		}
-
 		if (tree_tex == -1) {
 			tree_tex = TextureFromFile("./assets/objects/texture_gradient.png", ".");
 		}
@@ -312,6 +385,18 @@ void TrainView::draw()
 
 		if (capybara_tex == -1) {
 			capybara_tex = TextureFromFile("./assets/objects/Capybara_Base_color.png", ".");
+		}
+		if (!house1) {
+            house1 = new Model("./assets/objects/house_001.obj");
+		}
+		if (!house2) {
+			house2 = new Model("./assets/objects/house_002.obj");
+		}
+		if (!house3) {
+			house3 = new Model("./assets/objects/house_003.obj");
+		}
+		if (fantasyTexture == -1) {
+            fantasyTexture = TextureFromFile("./assets/objects/Texture_fantasy.png", ".");
 		}
 
 		if (!this->screen) {
@@ -433,6 +518,7 @@ void TrainView::draw()
 			skyBoxCubemapTexture = loadCubemap(faces);
 		}
 		//Load billboard tree
+		
 		if (!this->billboardTree) {
 			this->billboardTree = new Shader(
                 "./assets/shaders/billboardTree.vert",
@@ -468,7 +554,7 @@ void TrainView::draw()
 
 			billboardTreeTexture = TextureFromFile("/assets/images/tree_upsidedown.png", ".");
 		}
-
+		
 		//Load projector (project texture with texture matrix)
 		if (!projectorShader) {
 			this->projectorShader = new Shader(
@@ -522,10 +608,10 @@ void TrainView::draw()
 		}
 
 		if (trunkShader == nullptr) {
-			trunkCylinder = new Model("./assets/objects/cylinder.glb");
+			trunkCylinder = new Model("./assets/objects/cylinder.obj");
 			trunk_color = TextureFromFile("/assets/images/wood_0025_color_1k.jpg", ".");
 			trunk_height = TextureFromFile("/assets/images/wood_0025_height_1k.png", ".");
-			trunk_normal = TexTureFromFile("/assets/images/wood_0025_normal_opengl_1k.png", ".");
+			trunk_normal = TextureFromFile("/assets/images/wood_0025_normal_opengl_1k.png", ".");
 			trunkShader = new Shader(
 				"./assets/shaders/trunk.vert",
 				nullptr, nullptr, nullptr,
@@ -607,17 +693,18 @@ void TrainView::draw()
 	glEnable(GL_LIGHT1);
 	if (tw->trainCam->value() || !tw->headlight->value()) {
 		glDisable(GL_LIGHT3);
-	}
-	else {
+	}else {
 		glEnable(GL_LIGHT3);
 	}
-	float lightPosition[] = {0.0f, 0.0f, 0.0f, 0.0f};
+
+	/*
 	if (tw->dirlight->value()) {
 		float noAmbient[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 		float whiteDiffuse[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-		lightPosition[0] = 0.0f; lightPosition[1] = 1.0f; lightPosition[2] = 0.0f; lightPosition[3] = 0.0f;
-		//lightPosition = { 0.0f, 1.0f, 0.0f, 0.0f };
-
+		float angle = tw->lightanle->value();
+		float radius = tw->lightradius->value();
+		float strength = tw->brightness->value();
+		//lightPosition[0] = 0.0f; lightPosition[1] = 1.0f; lightPosition[2] = 0.0f; lightPosition[3] = 0.0f;
 		glLightfv(GL_LIGHT0, GL_AMBIENT, noAmbient);
 		glLightfv(GL_LIGHT0, GL_DIFFUSE, whiteDiffuse);
 		glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
@@ -625,52 +712,65 @@ void TrainView::draw()
 	else {
 		glDisable(GL_LIGHT0);
 	}
-	if (tw->pointlight->value()) {
-		float yellowAmbient[] = { 0.8f, 0.8f, 0.5f, 1.0f };
-		float yellowAmbientDiffuse[] = { 0.0f, 0.0f, 1.0f, 1.0f };
-		float PI = 3.1415926f;
-		float angle = tw->lightpos->value() * 2.0f * PI;
-		lightPosition[0] = 150.0f * cos(angle); lightPosition[1] = 5.0f; lightPosition[2] = 150.0f * sin(angle); lightPosition[3] = 1.0f;
-		//lightPosition = { -2.0f, 2.0f, -5.0f, 1.0f };
-		
-		glLightfv(GL_LIGHT1, GL_AMBIENT, yellowAmbient);
-		glLightfv(GL_LIGHT1, GL_DIFFUSE, yellowAmbientDiffuse);
-		//glLightf(GL_LIGHT1, GL_LINEAR_ATTENUATION, 0.05f);
-		glLightfv(GL_LIGHT1, GL_POSITION, lightPosition);
-
-	}
-	else {
-		glDisable(GL_LIGHT1);
-	}
-
+	*/
 	//*********************************************************************
 	//
 	// * set the light parameters
 	//
 	//**********************************************************************
-
-	if (!tw->dirlight->value() && !tw->pointlight->value()) {
-		GLfloat lightPosition1[] = { 0,1,1,0 }; // {50, 200.0, 50, 1.0};
-		GLfloat lightPosition2[] = { 1, 0, 0, 0 };
-		GLfloat lightPosition3[] = { 0, -1, 0, 0 };
-		GLfloat yellowLight[] = { 0.5f, 0.5f, .1f, 1.0 };
-		GLfloat whiteLight[] = { 1.0f, 1.0f, 1.0f, 1.0 };
-		GLfloat blueLight[] = { .1f,.1f,.3f,1.0 };
-		GLfloat grayLight[] = { .3f, .3f, .3f, 1.0 };
-
-		glEnable(GL_LIGHT0);
-		glEnable(GL_LIGHT1);
-
-		glLightfv(GL_LIGHT0, GL_POSITION, lightPosition1);
-		glLightfv(GL_LIGHT0, GL_DIFFUSE, whiteLight);
-		glLightfv(GL_LIGHT0, GL_AMBIENT, grayLight);
-
-		glLightfv(GL_LIGHT1, GL_POSITION, lightPosition2);
-		glLightfv(GL_LIGHT1, GL_DIFFUSE, yellowLight);
-		glLightfv(GL_LIGHT1, GL_AMBIENT, grayLight);
-
-		glLightfv(GL_LIGHT2, GL_POSITION, lightPosition3);
-		glLightfv(GL_LIGHT2, GL_DIFFUSE, blueLight);
+	float lightPosition[] = { 0.0f, 0.0f, 0.0f, 0.0f };
+	float PI = 3.1415926f;
+	float strength = 2.5f;
+	float lightColor[3];
+	if (tw->pointlight->value()) {
+		lightColor[0] = tw->lightR->value(); lightColor[1] = tw->lightG->value(); lightColor[2] = tw->lightB->value();
+	}
+	else {
+		lightColor[0] = 0.8f; lightColor[1] = 0.8f; lightColor[2] = 0.8f;
+	}
+	if (tw->pointlight->value()) {
+		// Enable only the point light
+		strength = tw->brightness->value();
+		float Ambient[] = { lightColor[0] * strength,  lightColor[1] * strength, lightColor[2] * strength, 1.0f }; // Scale red ambient by strength
+		float Diffuse[] = { lightColor[0] * strength, lightColor[1] * strength, lightColor[2] * strength, 1.0f }; // Scale red diffuse by strength
+		float angle = tw->lightangle->value();
+		float radius = tw->lightradius->value();
+		lightPosition[0] = radius * cos(angle);
+		lightPosition[1] = 20.0f;
+		lightPosition[2] = radius * sin(angle);
+		lightPosition[3] = 1.0f; // Positional light
+		glEnable(GL_LIGHT1);// Set the point light properties
+		glLightfv(GL_LIGHT1, GL_AMBIENT, Ambient);
+		glLightfv(GL_LIGHT1, GL_DIFFUSE, Diffuse);
+		glLightfv(GL_LIGHT1, GL_POSITION, lightPosition);
+		// Disable the other lights
+		glDisable(GL_LIGHT0);
+		glDisable(GL_LIGHT2);
+	}
+	else {
+		// Enable the complex light setup
+	GLfloat lightPosition1[] = { 0, 1, 1, 0 }; // Directional light
+	GLfloat lightPosition2[] = { 1, 0, 0, 0 };
+	GLfloat lightPosition3[] = { 0, -1, 0, 0 };
+	GLfloat yellowLight[] = { 0.5f, 0.5f, 0.1f, 1.0f };
+	GLfloat whiteLight[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	GLfloat blueLight[] = { 0.1f, 0.1f, 0.3f, 1.0f };
+	GLfloat grayLight[] = { 0.3f, 0.3f, 0.3f, 1.0f };
+	glEnable(GL_LIGHT0);// Configure the first light
+	glLightfv(GL_LIGHT0, GL_POSITION, lightPosition1);
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, whiteLight);
+	glLightfv(GL_LIGHT0, GL_AMBIENT, grayLight);
+	glEnable(GL_LIGHT1);// Configure the second light
+	glLightfv(GL_LIGHT1, GL_POSITION, lightPosition2);
+	glLightfv(GL_LIGHT1, GL_DIFFUSE, yellowLight);
+	glLightfv(GL_LIGHT1, GL_AMBIENT, grayLight);
+	glEnable(GL_LIGHT2);// Configure the third light
+	glLightfv(GL_LIGHT2, GL_POSITION, lightPosition3);
+	glLightfv(GL_LIGHT2, GL_DIFFUSE, blueLight);
+	// Disable the point light
+	glDisable(GL_LIGHT1);
+	lightPosition[0] = lightPosition[2] = lightPosition[3] = 0.0f;
+	lightPosition[1] = 500.f;//the light simulate light of daytime, which is viewed by shaders as at high postion.
 	}
 
 	//view and projection matrix setup
@@ -737,52 +837,49 @@ void TrainView::draw()
 		drawStuff(true);
 		unsetupShadows();
 	}
-	
+
 	//draw tree model
-	model = getTransformMatrix(model, glm::vec3(0, 0, 0), glm::vec3(2, 2, 2), glm::vec3(0, 1, 0), 0);
-	drawModel(tree, for_model_texture, tree_tex, projection, view, model);
+	//model = getTransformMatrix(model, glm::vec3(0, 0, 0), glm::vec3(2, 2, 2), glm::vec3(0, 1, 0), 0);
+	//drawModel(tree, for_model_texture, tree_tex, projection, view, model);
 
 	//draw flower model
-	model = getTransformMatrix(model, glm::vec3(-15, 0, 0), glm::vec3(5, 5, 5), glm::vec3(0, 1, 0), 0);
+	model = getTransformMatrix(model, glm::vec3(-40, 0, 0), glm::vec3(10, 10, 10), glm::vec3(0, 0, 0), 0);
 	drawModel(flower, for_model_texture, tree_tex, projection, view, model);
 
+	//model = getTransformMatrix(model, glm::vec3(-50, 0, 70), glm::vec3(1, 1, 1), glm::vec3(0, 0, 0), 0);
+	//drawModel(house1, for_model_texture, fantasyTexture, projection, view, model);
+
 	//draw rock model
-	model = getTransformMatrix(model, glm::vec3(-50, 0, 50), glm::vec3(15, 15, 15), glm::vec3(0, 1, 0), 0);
-	rockShader->Use();
-
-	glUniformMatrix4fv(glGetUniformLocation(rockShader->Program, "projection"), 1, GL_FALSE, projection);
-	glUniformMatrix4fv(glGetUniformLocation(rockShader->Program, "view"), 1, GL_FALSE, view);
-
-	glUniformMatrix4fv(glGetUniformLocation(rockShader->Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
-
-	glUniformMatrix4fv(glGetUniformLocation(rockShader->Program, "viewPos"), 1, GL_FALSE, glm::value_ptr(my_pos));
-
-
-	if (tw->pointlight->value()) {
+	if (tw->centerObject->value() == 2) {
+		rockShader->Use();
+		model = getTransformMatrix(model, glm::vec3(0, 5, 0), glm::vec3(15, 15, 15), glm::vec3(0, 1, 0), 0);
+		glUniformMatrix4fv(glGetUniformLocation(rockShader->Program, "projection"), 1, GL_FALSE, projection);
+		glUniformMatrix4fv(glGetUniformLocation(rockShader->Program, "view"), 1, GL_FALSE, view);
+		glUniformMatrix4fv(glGetUniformLocation(rockShader->Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
+		glUniformMatrix4fv(glGetUniformLocation(rockShader->Program, "viewPos"), 1, GL_FALSE, glm::value_ptr(my_pos));
 		glUniform3fv(glGetUniformLocation(rockShader->Program, "lightPos"), 1, lightPosition);
+		glUniform1f(glGetUniformLocation(rockShader->Program, "lightIntensity"), strength / 5.0f);
+		glUniform3f(glGetUniformLocation(rockShader->Program, "lightColor"), lightColor[0], lightColor[1], lightColor[2]);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, rock_spec);
+		glUniform1i(glGetUniformLocation(rockShader->Program, "specularMap"), 0);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, rock_normal);
+		glUniform1i(glGetUniformLocation(rockShader->Program, "normalMap"), 1);
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, rock_diff);
+		glUniform1i(glGetUniformLocation(rockShader->Program, "diffuseMap"), 2);
+		rock->Draw(*rockShader);
+		if (created) {
+			randSeed++;
+			created = false;
+		}
 	}
-	else if (tw->dirlight->value()) {
-		glUniform3fv(glGetUniformLocation(rockShader->Program, "lightPos"), 1, glm::value_ptr(glm::vec3(0, 1000, 0)));
-	}
-	else {
-		glUniform3fv(glGetUniformLocation(rockShader->Program, "lightPos"), 1, glm::value_ptr(glm::vec3(0, 1000, 0)));
-	}
-
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, rock_spec);
-	glUniform1i(glGetUniformLocation(rockShader->Program, "specularMap"), 0);
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, rock_normal);
-	glUniform1i(glGetUniformLocation(rockShader->Program, "normalMap"), 1);
-	glActiveTexture(GL_TEXTURE2);
-	glBindTexture(GL_TEXTURE_2D, rock_diff);
-	glUniform1i(glGetUniformLocation(rockShader->Program, "diffuseMap"), 2);
-
-	rock->Draw(*rockShader);
-	model = getTransformMatrix(model, glm::vec3(-90, 0, 50), glm::vec3(15, 15, 15), glm::vec3(0, 1, 0), 0);
-	glUniformMatrix4fv(glGetUniformLocation(rockShader->Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
-	rock->Draw(*rockShader);
-
+	else if (tw->centerObject->value() == 3) {
+		drawTree(this, 7, projection, view, my_pos, lightPosition, lightColor, randSeed);
+        created = true;
+	} 
+	//cout << tw->centerObject->value() << endl;
 	//draw skybox section start
 	glDisable(GL_CULL_FACE);
 	glDepthFunc(GL_LEQUAL);
@@ -799,17 +896,8 @@ void TrainView::draw()
 	//draw skybox section end
 	// ******************************************************************************************************************
 	//draw billboard tree start
-	glm::vec3 treePos(100, 20, 0);     // Tree position
-	glm::vec3 up(0.0f, 1.0f, 0.0f);
-	glm::vec3 lookDir = glm::normalize(my_pos - treePos); // Calculate billboard orientation
-	glm::vec3 right = glm::normalize(glm::cross(up, lookDir));
-	glm::vec3 newUp = glm::cross(lookDir, right);
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, treePos);
-	model[0] = glm::vec4(right, 0.0f);
-	model[1] = glm::vec4(newUp, 0.0f);
-	model[2] = glm::vec4(lookDir, 0.0f);
-	model = glm::scale(model, glm::vec3(25.0f, 25.0f, 25.0f));
+	//model = billBoardModel(glm::vec3(200, 20, -200), my_pos, glm::vec3(0, 1, 0));
+	//model = glm::scale(model, glm::vec3(25.0f, 25.0f, 25.0f));
 
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -818,16 +906,22 @@ void TrainView::draw()
 	glUniform1f(glGetUniformLocation(billboardTree->Program, "billboardTree"), billboardTreeTexture);
 	glUniformMatrix4fv(glGetUniformLocation(billboardTree->Program, "view"), 1, GL_FALSE, view);
 	glUniformMatrix4fv(glGetUniformLocation(billboardTree->Program, "projection"), 1, GL_FALSE, projection);
-	glm::mat4 billTreeModel = glm::scale(glm::mat4(1.0f), glm::vec3(25, 25, 25));
-	glUniformMatrix4fv(glGetUniformLocation(billboardTree->Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
 	glBindVertexArray(billboardtree_quadVAO);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, billboardTreeTexture);
-	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+	for (int x = 200; x >= -200; x -= 10) {
+		model = billBoardModel(glm::vec3(x, 20, -200), my_pos, glm::vec3(0, 1, 0));
+		model = glm::scale(model, glm::vec3(25.0f, 25.0f, 25.0f));
+		glUniformMatrix4fv(glGetUniformLocation(billboardTree->Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+	}
 
 	glBindVertexArray(0);// setting end
 	glDisable(GL_BLEND);
-    glDepthMask(GL_TRUE);
+	glDepthMask(GL_TRUE);
+	
+
 	//draw billboard tree end
 	// ******************************************************************************************************************
 
@@ -836,11 +930,14 @@ void TrainView::draw()
 	rainSystem->render(view, projection, rainShader);
 
 	//projector disable
-	glDisable(GL_TEXTURE_GEN_S);
-	glDisable(GL_TEXTURE_GEN_T);
-	glDisable(GL_TEXTURE_GEN_R);
-	glDisable(GL_TEXTURE_GEN_Q);
-	glDisable(GL_TEXTURE_2D);
+	if (tw->projector->value()) {
+		glDisable(GL_TEXTURE_GEN_S);
+		glDisable(GL_TEXTURE_GEN_T);
+		glDisable(GL_TEXTURE_GEN_R);
+		glDisable(GL_TEXTURE_GEN_Q);
+		glDisable(GL_TEXTURE_2D);
+	}
+	
 
 	//frame buffer create different view section start
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);// now bind back to default framebuffer and draw a quad plane with the attached framebuffer color texture
@@ -1494,116 +1591,3 @@ doPick()
 //========================================================================
 //Functions ad by whitefox 
 //========================================================================
-void TrainView::esfera(int radio, bool draw_line) {
-	float px, py, pz;
-	int i, j;
-	float incO = 2 * M_PI / sphere_divide;
-	float incA = M_PI / sphere_divide;
-	glBegin(GL_TRIANGLE_STRIP);
-	for (i = 0; i <= sphere_divide; i++) {
-		for (j = 0; j <= sphere_divide; j++) {
-			pz = cos(M_PI - (incA * j)) * radio;
-			py = sin(M_PI - (incA * j)) * sin(incO * i) * radio;
-			px = sin(M_PI - (incA * j)) * cos(incO * i) * radio;
-			//printf("%lf%lf%lf\n", px, py, pz);
-			glVertex3f(px, py, pz);
-			pz = cos(M_PI - (incA * j)) * radio;
-			py = sin(M_PI - (incA * j)) * sin(incO * (i + 1)) * radio;
-			px = sin(M_PI - (incA * j)) * cos(incO * (i + 1)) * radio;
-			glVertex3f(px, py, pz);
-		}
-	}
-	glEnd();
-
-	if (draw_line) {
-		glColor3ub(0, 0, 0);
-		glBegin(GL_LINE_STRIP);
-		for (i = 0; i <= sphere_divide; i++) {
-			for (j = 0; j <= sphere_divide; j++) {
-
-				pz = cos(M_PI - (incA * j)) * radio;
-				py = sin(M_PI - (incA * j)) * sin(incO * i) * radio;
-				px = sin(M_PI - (incA * j)) * cos(incO * i) * radio;
-				//printf("%lf%lf%lf\n", px, py, pz);
-				glVertex3f(px, py, pz);
-				pz = cos(M_PI - (incA * j)) * radio;
-				py = sin(M_PI - (incA * j)) * sin(incO * (i + 1)) * radio;
-				px = sin(M_PI - (incA * j)) * cos(incO * (i + 1)) * radio;
-				glVertex3f(px, py, pz);
-
-			}
-		}
-		glEnd();
-	}
-}
-// Function to draw a cylinder with a shader
-void drawTexturedLog(double height, double base, GLuint shaderProgram) {
-	// Activate shader program
-	glUseProgram(shaderProgram);
-
-	// Scale the cylinder based on height and base parameters
-	glPushMatrix();
-	glScalef(base, height, base);
-
-	// Render the cylinder using your mesh or predefined object
-	GLUquadric* quadric = gluNewQuadric();
-	gluQuadricTexture(quadric, GL_TRUE); // Enable texture coordinates
-	gluCylinder(quadric, 1.0, 0.8, 1.0, 20, 20); // Use normalized cylinder dimensions
-	gluDeleteQuadric(quadric);
-
-	glPopMatrix();
-
-	// Deactivate shader
-	glUseProgram(0);
-}
-
-// Leaves rendering (fixed pipeline, as per your requirement)
-void drawLeaf(int radius) {
-	glPushMatrix();
-	esfera(radius, false); // Reuse the existing esfera function
-	glPopMatrix();
-}
-
-// Recursive function to draw the tree
-void drawTreeRecursive(double height, double base, GLuint logShader, int depth,
-	double angleSpread, int branchCount) {
-	if (depth <= 0) return;
-
-	// Draw the trunk
-	drawTexturedLog(height, base, logShader);
-
-	// Move to the top of the trunk
-	glPushMatrix();
-	glTranslatef(0.0, height, 0.0);
-
-	// Reduce height and base for child branches
-	height *= 0.7;
-	base *= 0.7;
-
-	// Generate child branches
-	for (int i = 0; i < branchCount; i++) {
-		double angle = angleSpread * (i - branchCount / 2.0);
-		glPushMatrix();
-		glRotatef(angle, 0, 1, 0); // Spread branches around Y-axis
-		glRotatef(20 + rand() % 40, 1, 0, 0); // Add a slight upward tilt
-		drawTreeRecursive(height, base, logShader, depth - 1, angleSpread, branchCount);
-		glPopMatrix();
-	}
-
-	// Add leaves when depth is small
-	if (depth <= 2) {
-		drawLeaf(base * 2); // Use the base size to scale the leaf radius
-	}
-
-	glPopMatrix();
-}
-
-// Main tree-drawing function
-void drawTree(double height, double base, GLuint logShader, int depth = 5,
-	double angleSpread = 45.0, int branchCount = 3) {
-	glPushMatrix();
-	glTranslatef(0.0, -10.0, 0.0); // Position the tree
-	drawTreeRecursive(height, base, logShader, depth, angleSpread, branchCount);
-	glPopMatrix();
-}
-

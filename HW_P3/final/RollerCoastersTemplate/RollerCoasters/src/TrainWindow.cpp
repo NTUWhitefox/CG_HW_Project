@@ -43,7 +43,7 @@
 //========================================================================
 TrainWindow::
 TrainWindow(const int x, const int y) 
-	: Fl_Double_Window(x,y,800,600,"Train and Roller Coaster")
+	: Fl_Double_Window(x,y,1200,900,"Train and Roller Coaster")
 //========================================================================
 {
 	// make all of the widgets
@@ -57,7 +57,7 @@ TrainWindow(const int x, const int y)
 		this->resizable(trainView);
 
 		// to make resizing work better, put all the widgets in a group
-		widgets = new Fl_Group(600,5,190,590);
+		widgets = new Fl_Group(600,5,190,900);
 		widgets->begin();
 
 		runButton = new Fl_Button(605,pty,60,20,"Run");
@@ -142,19 +142,70 @@ TrainWindow(const int x, const int y)
 
 		pty += 30;
 
-		dirlight = new Fl_Button(605,pty,60,20,"Dir Light");
-		togglify(dirlight);
-		pointlight = new Fl_Button(675,pty,75,20,"Point Light");
+		centerObject = new Fl_Browser(605, pty, 190, 50, "centerObject");
+		centerObject->type(2);
+        centerObject->callback((Fl_Callback*)damageCB, this);
+		centerObject->add("None");
+		centerObject->add("Rock");
+        centerObject->add("Fractal Tree");
+		centerObject->select(2);
+
+		pty += 50;
+
+		pointlight = new Fl_Button(605,pty,50,20,"night");
 		togglify(pointlight);
 
 		pty += 30;
 
-		lightpos = new Fl_Value_Slider(655,pty,140,20,"light pos");
-		lightpos->range(0, 1);
-		lightpos->value(0);
-		lightpos->align(FL_ALIGN_LEFT);
-		lightpos->type(FL_HORIZONTAL);
-		lightpos->callback((Fl_Callback*)damageCB, this);
+		lightangle = new Fl_Value_Slider(655,pty,140,20,"lightangle");
+		lightangle->range(0, 6.2832);
+		lightangle->value(0);
+		lightangle->align(FL_ALIGN_LEFT);
+		lightangle->type(FL_HORIZONTAL);
+		lightangle->callback((Fl_Callback*)damageCB, this);
+
+		pty += 30;
+
+		lightradius = new Fl_Value_Slider(655, pty, 140, 20, "lightradius");
+		lightradius->range(0, 50);
+		lightradius->value(0);
+		lightradius->align(FL_ALIGN_LEFT);
+		lightradius->type(FL_HORIZONTAL);
+		lightradius->callback((Fl_Callback*)damageCB, this);
+
+		pty += 30;
+
+		brightness = new Fl_Value_Slider(655, pty, 140, 20, "brightness");
+		brightness->range(1.0f, 5.0f);
+		brightness->value(1.0f);
+		brightness->align(FL_ALIGN_LEFT);
+		brightness->type(FL_HORIZONTAL);
+		brightness->callback((Fl_Callback*)damageCB, this);
+
+		pty += 30;
+
+		lightR = new Fl_Value_Slider(655, pty, 140, 20, "R");
+		lightR->range(0.0f, 1.0f);
+		lightR->value(1.0f);
+		lightR->align(FL_ALIGN_LEFT);
+		lightR->type(FL_HORIZONTAL);
+		lightR->callback((Fl_Callback*)damageCB, this);
+		pty += 30;
+
+		lightG = new Fl_Value_Slider(655, pty, 140, 20, "G");
+		lightG->range(0.0f, 1.0f);
+		lightG->value(1.0f);
+		lightG->align(FL_ALIGN_LEFT);
+		lightG->type(FL_HORIZONTAL);
+		lightG->callback((Fl_Callback*)damageCB, this);
+		pty += 30;
+
+		lightB = new Fl_Value_Slider(655, pty, 140, 20, "B");
+		lightB->range(0.0f, 1.0f);
+		lightB->value(1.0f);
+		lightB->align(FL_ALIGN_LEFT);
+		lightB->type(FL_HORIZONTAL);
+		lightB->callback((Fl_Callback*)damageCB, this);
 
 		pty += 30;
 

@@ -16,7 +16,8 @@ uniform sampler2D specularMap;   // Specular map
 uniform sampler2D normalMap;     // Normal map
 uniform vec3 lightPos;           // Light position in world space
 uniform vec3 viewPos;            // Camera position in world space
-
+uniform vec3 lightColor;         // Light color
+uniform float lightIntensity;
 
 const float Ka = 0.2;
 const float Kd = 0.7;
@@ -37,9 +38,6 @@ vec2 blinnPhongDir(vec3 lightDir, float lightInt, float Ka, float Kd, float Ks, 
 
 void main()
 {
-
-    //const vec3 lightPos = vec3(-50.0f, 0.0f, 0.0f);
-
     // Retrieve normal from normal map
     vec3 normal = texture(normalMap, TexCoords).rgb;
     normal = normalize(normal * 2.0 - 1.0); // Transform from [0,1] to [-1,1]
@@ -52,15 +50,14 @@ void main()
     vec3 lightDir = TBN * (lightPos - FragPos);
 
     // Compute lighting
-    float lightIntensity = 1.0; // Assume uniform intensity for the light source
     vec2 lighting = blinnPhongDir(lightDir, lightIntensity, Ka, Kd, Ks, shininess, normal);
 
     // Retrieve texture colors
     vec3 diffuseColor = texture(diffuseMap, TexCoords).rgb;
     vec3 specularColor = texture(specularMap, TexCoords).rgb;
 
-    // Final color calculation
-    vec3 color = lighting.x * diffuseColor + lighting.y * specularColor;
+    // Final color calculation with lightColor
+    vec3 color = lightColor * (lighting.x * diffuseColor + lighting.y * specularColor);
 
     FragColor = vec4(color, 1.0);
 }

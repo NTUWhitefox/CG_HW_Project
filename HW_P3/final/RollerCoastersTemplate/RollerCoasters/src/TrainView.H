@@ -139,6 +139,11 @@ class TrainView : public Fl_Gl_Window
 		//model
 		Model* tree = nullptr;
 		Model* flower = nullptr;
+		Model* house1 = nullptr;
+        Model* house2 = nullptr;
+        Model* house3 = nullptr;
+		GLuint fantasyTexture = -1;
+
 		int	tree_tex = -1;//tree and flower texture
 		Model* capybara = nullptr;
 		int	capybara_tex = -1;
@@ -184,6 +189,8 @@ class TrainView : public Fl_Gl_Window
 		GLuint trunk_color;
 		GLuint trunk_height;
 		GLuint trunk_normal;
+		bool created = false;
+		int randSeed = 0;
 };
 
 struct RainParticle {
