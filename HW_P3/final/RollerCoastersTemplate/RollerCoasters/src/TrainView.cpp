@@ -263,6 +263,49 @@ void TrainView::drawModel(Model* model, Shader* shader, int tex_index, GLfloat p
 	glUseProgram(0);
 }
 
+void esfera(int radio, bool draw_line) {
+	static float sphere_divide = 20.0;
+	float px, py, pz;
+	int i, j;
+	float incO = 2 * M_PI / sphere_divide;
+	float incA = M_PI / sphere_divide;
+	glBegin(GL_TRIANGLE_STRIP);
+	for (i = 0; i <= sphere_divide; i++) {
+		for (j = 0; j <= sphere_divide; j++) {
+			pz = cos(M_PI - (incA * j)) * radio;
+			py = sin(M_PI - (incA * j)) * sin(incO * i) * radio;
+			px = sin(M_PI - (incA * j)) * cos(incO * i) * radio;
+			//printf("%lf%lf%lf\n", px, py, pz);
+			glVertex3f(px, py, pz);
+			pz = cos(M_PI - (incA * j)) * radio;
+			py = sin(M_PI - (incA * j)) * sin(incO * (i + 1)) * radio;
+			px = sin(M_PI - (incA * j)) * cos(incO * (i + 1)) * radio;
+			glVertex3f(px, py, pz);
+		}
+	}
+	glEnd();
+	if (draw_line) {
+		glColor3ub(0, 0, 0);
+		glBegin(GL_LINE_STRIP);
+		for (i = 0; i <= sphere_divide; i++) {
+			for (j = 0; j <= sphere_divide; j++) {
+
+				pz = cos(M_PI - (incA * j)) * radio;
+				py = sin(M_PI - (incA * j)) * sin(incO * i) * radio;
+				px = sin(M_PI - (incA * j)) * cos(incO * i) * radio;
+				//printf("%lf%lf%lf\n", px, py, pz);
+				glVertex3f(px, py, pz);
+				pz = cos(M_PI - (incA * j)) * radio;
+				py = sin(M_PI - (incA * j)) * sin(incO * (i + 1)) * radio;
+				px = sin(M_PI - (incA * j)) * cos(incO * (i + 1)) * radio;
+				glVertex3f(px, py, pz);
+
+			}
+		}
+		glEnd();
+	}
+}
+
 void drawTreeRecursive(TrainView* tw, float curLength, int branchNum, float downScaleFactor, glm::vec3 curPos, glm::vec3 curScale, glm::vec3 curRotation, int seed) {
 	if (branchNum <= 0 || curLength <= 0) return; // Base case for recursion
 
@@ -311,6 +354,7 @@ void drawTreeRecursive(TrainView* tw, float curLength, int branchNum, float down
 		// Recursive call for each branch
 		drawTreeRecursive(tw, curLength, branchNum - 1, downScaleFactor, newPos, newScale, newRotation, seed);
 	}
+	//esfera(1.0f, true);
 }
 
 void drawTree(TrainView* tw, int branchNum, GLfloat projection[16], GLfloat view[16], glm::vec3 my_pos, float lightPosition[4], float lightColor[3], int seed) {
@@ -374,7 +418,12 @@ void TrainView::draw()
 		}
 		if (!flower) {
 			flower = new Model("./assets/objects/flower.obj");
+			for (int i = 0; i < flowerNum; i++) {
+				glm::vec3 position = glm::vec3(rand() % 200 - 100, 0, rand() % 200 - 100);
+				flowerPos.push_back(position);
+			}
 		}
+		
 		if (tree_tex == -1) {
 			tree_tex = TextureFromFile("./assets/objects/texture_gradient.png", ".");
 		}
@@ -386,18 +435,18 @@ void TrainView::draw()
 		if (capybara_tex == -1) {
 			capybara_tex = TextureFromFile("./assets/objects/Capybara_Base_color.png", ".");
 		}
-		if (!house1) {
+		if (!house1) 
             house1 = new Model("./assets/objects/house_001.obj");
-		}
-		if (!house2) {
+		if (!house2) 
 			house2 = new Model("./assets/objects/house_002.obj");
-		}
-		if (!house3) {
+		if (!house3) 
 			house3 = new Model("./assets/objects/house_003.obj");
-		}
-		if (fantasyTexture == -1) {
+		if (fantasyTexture == -1) 
             fantasyTexture = TextureFromFile("./assets/objects/Texture_fantasy.png", ".");
-		}
+		//if(!ferris)
+            //ferris = new Model("./assets/objects/ferris_wheel_low_poly.glb");
+
+
 
 		if (!this->screen) {
 			this->screen = new
@@ -804,6 +853,9 @@ void TrainView::draw()
 		glEnable(GL_TEXTURE_GEN_S);
 		glEnable(GL_TEXTURE_GEN_T);
 	}
+	else {
+		glUseProgram(0);
+	}
 	//projector setup end
 
 
@@ -815,7 +867,7 @@ void TrainView::draw()
 	// now draw the ground plane
 	//*********************************************************************
 	// set to opengl fixed pipeline(use opengl 1.x draw function)
-	glUseProgram(0);
+	
 
 	setupFloor();
 	//glDisable(GL_LIGHTING);
@@ -843,11 +895,24 @@ void TrainView::draw()
 	//drawModel(tree, for_model_texture, tree_tex, projection, view, model);
 
 	//draw flower model
-	model = getTransformMatrix(model, glm::vec3(-40, 0, 0), glm::vec3(10, 10, 10), glm::vec3(0, 0, 0), 0);
+	int flowerNum = 25;
+	for (int i = 0; i < flowerNum; i++) {
+		model = getTransformMatrix(model, flowerPos[i], glm::vec3(5, 5, 5), glm::vec3(0, 1, 0), 0);
+        drawModel(flower, for_model_texture, tree_tex, projection, view, model);
+	}
+	
 	drawModel(flower, for_model_texture, tree_tex, projection, view, model);
 
-	//model = getTransformMatrix(model, glm::vec3(-50, 0, 70), glm::vec3(1, 1, 1), glm::vec3(0, 0, 0), 0);
-	//drawModel(house1, for_model_texture, fantasyTexture, projection, view, model);
+	model = getTransformMatrix(model, glm::vec3(-100, 0, 70), glm::vec3(10, 10, 10), glm::vec3(0, 1, 0), -90);
+	drawModel(house1, for_model_texture, fantasyTexture, projection, view, model);
+
+	model = getTransformMatrix(model, glm::vec3(+100, 0, 30), glm::vec3(10, 10, 10), glm::vec3(0, 1, 0), -90);
+	drawModel(house2, for_model_texture, fantasyTexture, projection, view, model);
+
+	model = getTransformMatrix(model, glm::vec3(-60, 0, -110), glm::vec3(10, 10, 10), glm::vec3(0, 1, 0), -90);
+	drawModel(house3, for_model_texture, fantasyTexture, projection, view, model);
+
+	
 
 	//draw rock model
 	if (tw->centerObject->value() == 2) {

@@ -139,10 +139,14 @@ class TrainView : public Fl_Gl_Window
 		//model
 		Model* tree = nullptr;
 		Model* flower = nullptr;
+		int flowerNum = 25;
+		vector<glm::vec3> flowerPos;
 		Model* house1 = nullptr;
         Model* house2 = nullptr;
         Model* house3 = nullptr;
 		GLuint fantasyTexture = -1;
+
+		//Model* ferris = nullptr; 
 
 		int	tree_tex = -1;//tree and flower texture
 		Model* capybara = nullptr;
