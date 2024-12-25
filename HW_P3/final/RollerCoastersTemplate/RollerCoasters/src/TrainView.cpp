@@ -262,50 +262,7 @@ void TrainView::drawModel(Model* model, Shader* shader, int tex_index, GLfloat p
 	model->Draw(*shader);
 	glUseProgram(0);
 }
-
-void esfera(int radio, bool draw_line) {
-	static float sphere_divide = 20.0;
-	float px, py, pz;
-	int i, j;
-	float incO = 2 * M_PI / sphere_divide;
-	float incA = M_PI / sphere_divide;
-	glBegin(GL_TRIANGLE_STRIP);
-	for (i = 0; i <= sphere_divide; i++) {
-		for (j = 0; j <= sphere_divide; j++) {
-			pz = cos(M_PI - (incA * j)) * radio;
-			py = sin(M_PI - (incA * j)) * sin(incO * i) * radio;
-			px = sin(M_PI - (incA * j)) * cos(incO * i) * radio;
-			//printf("%lf%lf%lf\n", px, py, pz);
-			glVertex3f(px, py, pz);
-			pz = cos(M_PI - (incA * j)) * radio;
-			py = sin(M_PI - (incA * j)) * sin(incO * (i + 1)) * radio;
-			px = sin(M_PI - (incA * j)) * cos(incO * (i + 1)) * radio;
-			glVertex3f(px, py, pz);
-		}
-	}
-	glEnd();
-	if (draw_line) {
-		glColor3ub(0, 0, 0);
-		glBegin(GL_LINE_STRIP);
-		for (i = 0; i <= sphere_divide; i++) {
-			for (j = 0; j <= sphere_divide; j++) {
-
-				pz = cos(M_PI - (incA * j)) * radio;
-				py = sin(M_PI - (incA * j)) * sin(incO * i) * radio;
-				px = sin(M_PI - (incA * j)) * cos(incO * i) * radio;
-				//printf("%lf%lf%lf\n", px, py, pz);
-				glVertex3f(px, py, pz);
-				pz = cos(M_PI - (incA * j)) * radio;
-				py = sin(M_PI - (incA * j)) * sin(incO * (i + 1)) * radio;
-				px = sin(M_PI - (incA * j)) * cos(incO * (i + 1)) * radio;
-				glVertex3f(px, py, pz);
-
-			}
-		}
-		glEnd();
-	}
-}
-
+ 
 void drawTreeRecursive(TrainView* tw, float curLength, int branchNum, float downScaleFactor, glm::vec3 curPos, glm::vec3 curScale, glm::vec3 curRotation, int seed) {
 	if (branchNum <= 0 || curLength <= 0) return; // Base case for recursion
 
@@ -421,6 +378,7 @@ void TrainView::draw()
 			for (int i = 0; i < flowerNum; i++) {
 				glm::vec3 position = glm::vec3(rand() % 200 - 100, 0, rand() % 200 - 100);
 				flowerPos.push_back(position);
+				aniLength.push_back((double)rand() / ((double)RAND_MAX) / 2.0 + 0.5);//random between 0.5 to 1;
 			}
 		}
 		
@@ -446,7 +404,12 @@ void TrainView::draw()
 		//if(!ferris)
             //ferris = new Model("./assets/objects/ferris_wheel_low_poly.glb");
 
-
+		if (!dissolve) {
+			dissolve = new Shader(
+				"./assets/shaders/dissolve.vert",
+				nullptr, nullptr, nullptr,
+				"./assets/shaders/dissolve.frag");
+		}
 
 		if (!this->screen) {
 			this->screen = new
@@ -649,7 +612,7 @@ void TrainView::draw()
 
 		if (rainSystem == nullptr) {
 			rainTexture = TextureFromFile("/assets/images/rain.png", ".");
-			rainSystem = new RainSystem(100.0f, 100.0f, 300, 5.0f, rainTexture);
+			rainSystem = new RainSystem(150.0f, 150.0f, 1000, 9.0f, rainTexture);
 			rainShader = new Shader(
 				"./assets/shaders/rain.vert",
 				nullptr, nullptr, nullptr,
@@ -896,12 +859,27 @@ void TrainView::draw()
 
 	//draw flower model
 	int flowerNum = 25;
+	dissolve->Use();
+	glActiveTexture(GL_TEXTURE0); // active proper texture unit before binding
+	glUniformMatrix4fv(glGetUniformLocation(dissolve->Program, "projection"), 1, GL_FALSE, projection);
+	glUniformMatrix4fv(glGetUniformLocation(dissolve->Program, "view"), 1, GL_FALSE, view);
+	glUniform1i(glGetUniformLocation(dissolve->Program, "diffuseTexture"), 0);
+	glBindTexture(GL_TEXTURE_2D, tree_tex);
+	glActiveTexture(GL_TEXTURE0);
+	
+	
+	timeElapsed += 1.0f / 30.0f;
 	for (int i = 0; i < flowerNum; i++) {
 		model = getTransformMatrix(model, flowerPos[i], glm::vec3(5, 5, 5), glm::vec3(0, 1, 0), 0);
-        drawModel(flower, for_model_texture, tree_tex, projection, view, model);
+		glUniformMatrix4fv(glGetUniformLocation(dissolve->Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
+		float factor = 0.5 * (aniLength[i] + sin(1.0f * timeElapsed));
+		glUniform1f(glGetUniformLocation(dissolve->Program, "dissolveFactor"), factor);
+
+		flower->Draw(*dissolve);	
 	}
-	
-	drawModel(flower, for_model_texture, tree_tex, projection, view, model);
+	glUseProgram(0);
+
+	//drawModel(flower, for_model_texture, tree_tex, projection, view, model);
 
 	model = getTransformMatrix(model, glm::vec3(-100, 0, 70), glm::vec3(10, 10, 10), glm::vec3(0, 1, 0), -90);
 	drawModel(house1, for_model_texture, fantasyTexture, projection, view, model);

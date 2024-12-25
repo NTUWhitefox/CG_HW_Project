@@ -141,11 +141,12 @@ class TrainView : public Fl_Gl_Window
 		Model* flower = nullptr;
 		int flowerNum = 25;
 		vector<glm::vec3> flowerPos;
+		vector<float> aniLength;
 		Model* house1 = nullptr;
         Model* house2 = nullptr;
         Model* house3 = nullptr;
 		GLuint fantasyTexture = -1;
-
+		Shader* dissolve = nullptr;
 		//Model* ferris = nullptr; 
 
 		int	tree_tex = -1;//tree and flower texture
@@ -195,6 +196,8 @@ class TrainView : public Fl_Gl_Window
 		GLuint trunk_normal;
 		bool created = false;
 		int randSeed = 0;
+
+		float timeElapsed = 0;
 };
 
 struct RainParticle {
@@ -217,7 +220,7 @@ public:
 		for (int i = 0; i < numParticles; ++i) {
 			rainPositions.push_back(glm::vec3(
 				randomRange(-areaWidth / 2.0f, areaWidth / 2.0f),
-				randomRange(30.0f, 50.0f), // Start above the ground
+				randomRange(30.0f, 70.0f), // Start above the ground
 				randomRange(-areaDepth / 2.0f, areaDepth / 2.0f)
 			));
 		}
@@ -270,7 +273,7 @@ public:
 
 			// Reset raindrop if it falls below ground level
 			if (pos.y < 0.0f) {
-				pos.y = randomRange(5.0f, 10.0f); // Reset to above the scene
+				pos.y = randomRange(30.0f, 70.0f); // Reset to above the scene
 				pos.x = randomRange(-areaWidth / 2.0f, areaWidth / 2.0f);
 				pos.z = randomRange(-areaDepth / 2.0f, areaDepth / 2.0f);
 			}
